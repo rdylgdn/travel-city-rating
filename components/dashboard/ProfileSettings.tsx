@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { UserProfile } from "@/lib/mock-user";
-
-export default function ProfileSettings({ user }: { user: UserProfile }) {
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+export default function ProfileSettings({ displayName, displayEmail }: { displayName: string; displayEmail: string }) {
+  const [name, setName] = useState(displayName);
+  const [email, setEmail] = useState(displayEmail);
   const [saved, setSaved] = useState(false);
 
   function handleSave(e: React.FormEvent) {

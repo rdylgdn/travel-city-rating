@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Bookmark, Star, Settings, Sliders, CheckCircle2, Globe } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
-import { UserProfile } from "@/lib/mock-user";
 import SavedCities from "@/components/dashboard/SavedCities";
 import VisitedCities from "@/components/dashboard/VisitedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
@@ -23,7 +22,8 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 ];
 
 type Props = {
-  user: UserProfile;
+  displayName: string;
+  displayEmail: string;
   savedCities: { city: City; budgetMode: BudgetMode }[];
   visitedCities: City[];
   reviews: Review[];
@@ -32,7 +32,7 @@ type Props = {
 
 const TOTAL_COUNTRIES = 195;
 
-export default function DashboardClient({ user, savedCities, visitedCities, reviews, stats }: Props) {
+export default function DashboardClient({ displayName, displayEmail, savedCities, visitedCities, reviews, stats }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("saved");
   const [showMap, setShowMap] = useState(false);
 
@@ -43,11 +43,11 @@ export default function DashboardClient({ user, savedCities, visitedCities, revi
       {/* Profile header */}
       <div className="flex items-center gap-4 mb-8">
         <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-lg shrink-0">
-          {user.avatarInitials}
+          {displayName.slice(0, 2).toUpperCase()}
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">{user.name}</h1>
-          <p className="text-sm text-gray-400">{user.email} · Member since {user.joinedDate}</p>
+          <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
+          <p className="text-sm text-gray-400">{displayEmail}</p>
         </div>
       </div>
 
@@ -102,8 +102,8 @@ export default function DashboardClient({ user, savedCities, visitedCities, revi
       {activeTab === "saved" && <SavedCities cities={savedCities} />}
       {activeTab === "visited" && <VisitedCities cities={visitedCities} />}
       {activeTab === "reviews" && <MyReviews reviews={reviews} />}
-      {activeTab === "preferences" && <TravelPreferences user={user} />}
-      {activeTab === "settings" && <ProfileSettings user={user} />}
+      {activeTab === "preferences" && <TravelPreferences displayName={displayName} displayEmail={displayEmail} />}
+      {activeTab === "settings" && <ProfileSettings displayName={displayName} displayEmail={displayEmail} />}
 
       {showMap && (
         <CountriesModal visitedCities={visitedCities} savedCities={savedCities} onClose={() => setShowMap(false)} />

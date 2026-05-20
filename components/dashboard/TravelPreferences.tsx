@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { TravelStyle, BudgetMode } from "@/lib/types";
-import { UserProfile } from "@/lib/mock-user";
 import { cn } from "@/lib/utils";
 
 const allStyles: TravelStyle[] = [
@@ -18,9 +17,9 @@ const budgetModes: { value: BudgetMode; label: string; description: string }[] =
   { value: "luxury", label: "Luxury", description: "5-star hotels, fine dining, private transfers" },
 ];
 
-export default function TravelPreferences({ user }: { user: UserProfile }) {
-  const [styles, setStyles] = useState<TravelStyle[]>(user.travelStyles);
-  const [budgetMode, setBudgetMode] = useState<BudgetMode>(user.defaultBudgetMode);
+export default function TravelPreferences({ displayName, displayEmail }: { displayName: string; displayEmail: string }) {
+  const [styles, setStyles] = useState<TravelStyle[]>([]);
+  const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [saved, setSaved] = useState(false);
 
   function toggleStyle(s: TravelStyle) {
