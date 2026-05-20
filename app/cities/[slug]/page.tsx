@@ -7,6 +7,7 @@ import { blendScores } from "@/lib/scores";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
+import ReviewsGate from "@/components/ReviewsGate";
 import ReviewForm from "@/components/ReviewForm";
 import ReviewSignInPrompt from "@/components/ReviewSignInPrompt";
 import CityDetailClient from "./CityDetailClient";
@@ -43,14 +44,16 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   const supabase = await createClient();
 
-  // Fetch reviews and auth separately — no join since reviews→profiles has no direct FK
-  const [{ data: dbReviews }, { data: { user } }] = await Promise.all([
+  // Fetch reviews, anonymous ratings, and auth in parallel
+  const [{ data: dbReviews }, { data: anonData }, { data: { user } }] = await Promise.all([
     supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
+    supabase.from("anonymous_ratings").select("overall_score").eq("city_slug", slug),
     supabase.auth.getUser(),
   ]);
 
   const reviews = dbReviews ?? [];
-  const blended = blendScores(city, reviews);
+  const anonScores = (anonData ?? []).map((r) => Number(r.overall_score));
+  const blended = blendScores(city, reviews, anonScores);
   const userReview = user ? reviews.find((r: { user_id: string }) => r.user_id === user.id) : null;
 
   // Fetch profiles + visited counts for all reviewers in parallel
@@ -142,12 +145,16 @@ export default async function CityPage({ params, searchParams }: Props) {
         {/* Snapshot + budget */}
         <CityDetailClient citySlug={city.slug} initialBudgetMode={initialBudgetMode} city={city} />
 
-        {/* Scores — blended from seed + user reviews */}
+        {/* Scores — blended from seed + member reviews + anonymous ratings */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-800">Scores</h2>
-            {reviews.length > 0 && (
-              <span className="text-xs text-gray-400">Based on {reviews.length} {reviews.length === 1 ? "review" : "reviews"} + editorial</span>
+            {(reviews.length > 0 || anonScores.length > 0) && (
+              <span className="text-xs text-gray-400">
+                {reviews.length > 0 && `${reviews.length} ${reviews.length === 1 ? "review" : "reviews"}`}
+                {reviews.length > 0 && anonScores.length > 0 && " · "}
+                {anonScores.length > 0 && `${anonScores.length} anonymous`}
+              </span>
             )}
           </div>
           <div className="space-y-3">
@@ -199,8 +206,8 @@ export default async function CityPage({ params, searchParams }: Props) {
           </ul>
         </div>
 
-        {/* Anonymous rating */}
-        <AnonymousRatingWidget cityId={city.id} />
+        {/* Anonymous rating — guests only */}
+        {!user && <AnonymousRatingWidget citySlug={city.slug} />}
 
         {/* Reviews section */}
         <div>
@@ -209,44 +216,49 @@ export default async function CityPage({ params, searchParams }: Props) {
             <span className="text-sm text-gray-400 font-normal ml-2">({reviews.length})</span>
           </h2>
 
-          {/* Review form or login prompt */}
           {user ? (
-            !userReview ? (
-              <div className="mb-6">
-                <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} />
-              </div>
-            ) : (
-              <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700">
-                You've already reviewed this city.
-              </div>
-            )
-          ) : (
-            <div className="mb-6">
-              <ReviewSignInPrompt />
-            </div>
-          )}
+            <>
+              {/* Review form or already-reviewed note */}
+              {!userReview ? (
+                <div className="mb-6">
+                  <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} />
+                </div>
+              ) : (
+                <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700">
+                  You&apos;ve already reviewed this city.
+                </div>
+              )}
 
-          {/* Reviews list */}
-          {reviews.length === 0 ? (
-            <p className="text-gray-400 text-sm">No reviews yet. Be the first!</p>
+              {/* Reviews list */}
+              {reviews.length === 0 ? (
+                <p className="text-gray-400 text-sm">No reviews yet. Be the first!</p>
+              ) : (
+                <div className="space-y-3">
+                  {reviews.map((r) => (
+                    <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={{
+                      id: r.id,
+                      cityId: city.id,
+                      authorName: reviewProfiles[r.id]?.displayName ?? "Traveler",
+                      travelStyle: r.travel_style,
+                      budgetCategory: r.budget_category,
+                      monthVisited: r.month_visited ?? "",
+                      overallRating: r.overall_rating,
+                      writtenReview: r.written_review ?? "",
+                      pros: r.pros ?? [],
+                      cons: r.cons ?? [],
+                      createdAt: r.created_at?.slice(0, 10) ?? "",
+                    }} />
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
-            <div className="space-y-3">
-              {reviews.map((r) => (
-                <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={{
-                  id: r.id,
-                  cityId: city.id,
-                  authorName: reviewProfiles[r.id]?.displayName ?? "Traveler",
-                  travelStyle: r.travel_style,
-                  budgetCategory: r.budget_category,
-                  monthVisited: r.month_visited ?? "",
-                  overallRating: r.overall_rating,
-                  writtenReview: r.written_review ?? "",
-                  pros: r.pros ?? [],
-                  cons: r.cons ?? [],
-                  createdAt: r.created_at?.slice(0, 10) ?? "",
-                }} />
-              ))}
-            </div>
+            /* Guest — blurred gate */
+            reviews.length === 0 ? (
+              <ReviewSignInPrompt />
+            ) : (
+              <ReviewsGate reviewCount={reviews.length} />
+            )
           )}
         </div>
       </div>
