@@ -82,27 +82,21 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
           <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">Overall score</p>
-            <p className="font-bold text-gray-800">{city.scores.overall.toFixed(1)}/10</p>
-          </div>
-          <div className="bg-rose-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">{budgetLabel(budgetMode)}</p>
-            <p className="font-bold text-rose-600">${dailyBudget}/day</p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">Best season</p>
-            <p className="font-bold text-gray-800">{city.bestSeason}</p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">Ratings</p>
-            <p className="font-bold text-gray-800">{totalRatings ?? 0}</p>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">Reviews</p>
-            <p className="font-bold text-gray-800">{memberReviews ?? 0}</p>
-          </div>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          {[
+            { label: "Score", value: `${city.scores.overall.toFixed(1)}/10`, highlight: false },
+            { label: "Budget", value: `$${dailyBudget}/day`, highlight: true },
+            { label: "Best season", value: city.bestSeason, highlight: false },
+            { label: "Ratings", value: String(totalRatings ?? 0), highlight: false },
+            { label: "Reviews", value: String(memberReviews ?? 0), highlight: false },
+          ].map(({ label, value, highlight }) => (
+            <div key={label} className={`rounded-xl p-2.5 text-center ${highlight ? "bg-rose-50" : "bg-gray-50"}`}>
+              <p className="text-[10px] text-gray-400 mb-0.5 leading-none">{label}</p>
+              <p className={`text-sm font-bold leading-tight truncate ${highlight ? "text-rose-600" : "text-gray-800"}`}>
+                {value}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
