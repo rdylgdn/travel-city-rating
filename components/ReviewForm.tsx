@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Plus, X, Loader2, CheckCircle2, ChevronDown } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { TravelStyle } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
+  const [expanded, setExpanded] = useState(false);
   const [travelStyle, setTravelStyle] = useState<TravelStyle | null>(null);
   const [budgetCategory, setBudgetCategory] = useState<string | null>(null);
   const [month, setMonth] = useState("");
@@ -107,12 +108,38 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 border border-gray-100 rounded-2xl p-5">
-      <h3 className="font-bold text-gray-800 text-lg">Write a review</h3>
+    <form onSubmit={handleSubmit} className="border border-gray-100 rounded-2xl overflow-hidden">
+      {/* Header — always visible */}
+      <div className="px-5 py-4 bg-gray-50 border-b border-gray-100">
+        <h3 className="font-bold text-gray-800 text-base">Submit a review</h3>
+        <p className="text-xs text-gray-400 mt-0.5">Your ratings directly influence this city's scores.</p>
+      </div>
 
+      <div className="p-5 space-y-6">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm text-red-600">{error}</div>
       )}
+
+      {/* Overall rating — always shown first */}
+      <div>
+        <label className="text-sm font-semibold text-gray-700 block mb-2">Overall rating *</label>
+        <div className="flex gap-1.5 flex-wrap">
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+            <button key={n} type="button" onClick={() => { setOverallRating(n); setExpanded(true); }}
+              className={cn("w-10 h-10 rounded-xl text-sm font-semibold border transition-all",
+                overallRating === n ? "bg-rose-500 text-white border-rose-500" : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
+              )}>
+              {n}
+            </button>
+          ))}
+        </div>
+        {!expanded && (
+          <p className="text-xs text-gray-400 mt-2">Pick a score to continue filling out your review.</p>
+        )}
+      </div>
+
+      {/* Expanded form — shown after overall rating is picked */}
+      {expanded && <>
 
       {/* Travel style */}
       <div>
@@ -158,21 +185,6 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
               {years.map((y) => <option key={y}>{y}</option>)}
             </select>
           </div>
-        </div>
-      </div>
-
-      {/* Overall rating */}
-      <div>
-        <label className="text-sm font-semibold text-gray-700 block mb-2">Overall rating *</label>
-        <div className="flex gap-1.5 flex-wrap">
-          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-            <button key={n} type="button" onClick={() => setOverallRating(n)}
-              className={cn("w-10 h-10 rounded-xl text-sm font-semibold border transition-all",
-                overallRating === n ? "bg-rose-500 text-white border-rose-500" : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
-              )}>
-              {n}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -264,6 +276,9 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
         {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         Submit review
       </button>
+
+      </>}
+      </div>
     </form>
   );
 }

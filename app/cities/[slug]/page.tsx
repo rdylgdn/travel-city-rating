@@ -8,6 +8,7 @@ import ScoreBar from "@/components/ScoreBar";
 import ReviewCard from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewForm from "@/components/ReviewForm";
+import ReviewSignInPrompt from "@/components/ReviewSignInPrompt";
 import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
 import { BudgetMode } from "@/lib/types";
@@ -178,8 +179,8 @@ export default async function CityPage({ params, searchParams }: Props) {
               </div>
             )
           ) : (
-            <div className="mb-6 border border-gray-100 rounded-xl px-4 py-4 flex items-center justify-between">
-              <p className="text-sm text-gray-500">Sign in to leave a review and influence this city's scores.</p>
+            <div className="mb-6">
+              <ReviewSignInPrompt />
             </div>
           )}
 
