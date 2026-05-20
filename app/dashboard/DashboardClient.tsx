@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Bookmark, Star, Settings, Sliders, MapPin } from "lucide-react";
-import { City, Review } from "@/lib/types";
+import { City, Review, BudgetMode } from "@/lib/types";
 import { UserProfile, CityStats } from "@/lib/mock-user";
 import SavedCities from "@/components/dashboard/SavedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
@@ -21,12 +21,12 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 type Props = {
   user: UserProfile;
-  savedCities: City[];
+  savedCities: { city: City; budgetMode: BudgetMode }[];
   reviews: Review[];
   stats: CityStats;
 };
 
-export default function DashboardClient({ user, savedCities, reviews, stats }: Props) {
+export default function DashboardClient({ user, savedCities, reviews, stats  }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("saved");
 
   return (

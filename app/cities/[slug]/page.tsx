@@ -5,10 +5,14 @@ import { cities, reviews } from "@/lib/seed-data";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
-import SaveButton from "@/components/SaveButton";
+import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
+import { BudgetMode } from "@/lib/types";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ budget?: string }>;
+};
 
 export async function generateStaticParams() {
   return cities.map((c) => ({ slug: c.slug }));
@@ -21,10 +25,15 @@ export async function generateMetadata({ params }: Props) {
   return { title: `${city.name}, ${city.country} — CityRate` };
 }
 
-export default async function CityPage({ params }: Props) {
+export default async function CityPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { budget } = await searchParams;
   const city = cities.find((c) => c.slug === slug);
   if (!city) notFound();
+
+  const validModes: BudgetMode[] = ["budget", "midRange", "luxury"];
+  const initialBudgetMode: BudgetMode =
+    validModes.includes(budget as BudgetMode) ? (budget as BudgetMode) : "budget";
 
   const cityReviews = reviews.filter((r) => r.cityId === city.id);
 
@@ -51,8 +60,9 @@ export default async function CityPage({ params }: Props) {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <div className="absolute top-4 right-4">
-          <SaveButton citySlug={city.slug} />
+        {/* Save button — client island */}
+        <div className="absolute top-4 right-4 z-10">
+          <CityDetailClient citySlug={city.slug} initialBudgetMode={initialBudgetMode} heroOnly />
         </div>
         <div className="absolute bottom-6 left-4 right-4 max-w-4xl mx-auto">
           <div className="flex flex-wrap gap-1.5 mb-2">
@@ -79,26 +89,12 @@ export default async function CityPage({ params }: Props) {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 mt-6 space-y-8">
-        {/* Snapshot */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Overall score", value: `${city.scores.overall.toFixed(1)}/10`, icon: Star },
-            { label: "Budget/day", value: `$${city.dailyBudget.budget}`, icon: null },
-            { label: "Best season", value: city.bestSeason, icon: Calendar },
-            { label: "Reviews", value: String(city.reviewCount), icon: Users },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-400 mb-1">{label}</p>
-              <p className="font-bold text-gray-800">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Summary */}
-        <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-2">Why visit?</h2>
-          <p className="text-gray-600 leading-relaxed">{city.whyVisit}</p>
-        </div>
+        {/* Snapshot + budget mode selector */}
+        <CityDetailClient
+          citySlug={city.slug}
+          initialBudgetMode={initialBudgetMode}
+          city={city}
+        />
 
         {/* Scores */}
         <div>
@@ -106,19 +102,6 @@ export default async function CityPage({ params }: Props) {
           <div className="space-y-3">
             {scoreLabels.map(([key, label]) => (
               <ScoreBar key={key} label={label} score={city.scores[key]} />
-            ))}
-          </div>
-        </div>
-
-        {/* Budget breakdown */}
-        <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-3">Budget breakdown <span className="text-sm text-gray-400 font-normal">(budget traveler · USD/day)</span></h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {Object.entries(city.budgetBreakdown).map(([key, val]) => (
-              <div key={key} className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 capitalize mb-1">{key}</p>
-                <p className="font-semibold text-gray-800">${val}/day</p>
-              </div>
             ))}
           </div>
         </div>
@@ -145,6 +128,12 @@ export default async function CityPage({ params }: Props) {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Why visit */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-2">Why visit?</h2>
+          <p className="text-gray-600 leading-relaxed">{city.whyVisit}</p>
         </div>
 
         {/* Common complaints */}

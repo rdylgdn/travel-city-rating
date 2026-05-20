@@ -2,55 +2,56 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { BudgetMode } from "@/lib/types";
+
+type SavedEntry = { slug: string; budgetMode: BudgetMode };
 
 export function useSavedCities() {
   const supabase = createClient();
-  const [savedSlugs, setSavedSlugs] = useState<Set<string>>(new Set());
+  const [saved, setSaved] = useState<Map<string, BudgetMode>>(new Map());
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  async function fetchSaved(uid: string) {
+    const { data: rows } = await supabase
+      .from("saved_cities")
+      .select("city_slug, budget_mode")
+      .eq("user_id", uid);
+    const map = new Map<string, BudgetMode>();
+    (rows ?? []).forEach((r) => map.set(r.city_slug, r.budget_mode as BudgetMode));
+    setSaved(map);
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       const uid = data.user?.id ?? null;
       setUserId(uid);
-      if (!uid) { setLoading(false); return; }
-
-      supabase
-        .from("saved_cities")
-        .select("city_slug")
-        .eq("user_id", uid)
-        .then(({ data: rows }) => {
-          setSavedSlugs(new Set((rows ?? []).map((r) => r.city_slug)));
-          setLoading(false);
-        });
+      if (uid) fetchSaved(uid).finally(() => setLoading(false));
+      else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const uid = session?.user?.id ?? null;
       setUserId(uid);
-      if (!uid) { setSavedSlugs(new Set()); setLoading(false); return; }
-
-      supabase
-        .from("saved_cities")
-        .select("city_slug")
-        .eq("user_id", uid)
-        .then(({ data: rows }) => {
-          setSavedSlugs(new Set((rows ?? []).map((r) => r.city_slug)));
-        });
+      if (!uid) { setSaved(new Map()); setLoading(false); return; }
+      fetchSaved(uid);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const toggle = useCallback(async (citySlug: string): Promise<"saved" | "unsaved" | "unauthenticated"> => {
+  const toggle = useCallback(async (
+    citySlug: string,
+    budgetMode: BudgetMode = "budget"
+  ): Promise<"saved" | "unsaved" | "unauthenticated"> => {
     if (!userId) return "unauthenticated";
 
-    const isSaved = savedSlugs.has(citySlug);
+    const isSaved = saved.has(citySlug);
 
     // Optimistic update
-    setSavedSlugs((prev) => {
-      const next = new Set(prev);
-      isSaved ? next.delete(citySlug) : next.add(citySlug);
+    setSaved((prev) => {
+      const next = new Map(prev);
+      isSaved ? next.delete(citySlug) : next.set(citySlug, budgetMode);
       return next;
     });
 
@@ -63,11 +64,11 @@ export function useSavedCities() {
     } else {
       await supabase
         .from("saved_cities")
-        .insert({ user_id: userId, city_slug: citySlug });
+        .insert({ user_id: userId, city_slug: citySlug, budget_mode: budgetMode });
     }
 
     return isSaved ? "unsaved" : "saved";
-  }, [userId, savedSlugs]);
+  }, [userId, saved]);
 
-  return { savedSlugs, toggle, loading, isLoggedIn: !!userId };
+  return { saved, toggle, loading, isLoggedIn: !!userId };
 }
