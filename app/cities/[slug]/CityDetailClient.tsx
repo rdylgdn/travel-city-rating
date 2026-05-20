@@ -13,9 +13,10 @@ type Props = {
   initialBudgetMode: BudgetMode;
   city?: City;
   heroOnly?: boolean;
+  totalRatings?: number; // member reviews + anonymous from DB
 };
 
-export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly }: Props) {
+export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly, totalRatings }: Props) {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(initialBudgetMode);
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
@@ -94,8 +95,8 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
             <p className="font-bold text-gray-800">{city.bestSeason}</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-3 text-center">
-            <p className="text-xs text-gray-400 mb-1">Reviews</p>
-            <p className="font-bold text-gray-800">{city.reviewCount}</p>
+            <p className="text-xs text-gray-400 mb-1">Ratings</p>
+            <p className="font-bold text-gray-800">{totalRatings ?? 0}</p>
           </div>
         </div>
       </div>

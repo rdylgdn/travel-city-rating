@@ -145,7 +145,12 @@ export default async function CityPage({ params, searchParams }: Props) {
 
       <div className="max-w-4xl mx-auto px-4 mt-6 space-y-8">
         {/* Snapshot + budget */}
-        <CityDetailClient citySlug={city.slug} initialBudgetMode={initialBudgetMode} city={city} />
+        <CityDetailClient
+          citySlug={city.slug}
+          initialBudgetMode={initialBudgetMode}
+          city={city}
+          totalRatings={reviews.length + anonScores.length}
+        />
 
         {/* Scores — blended from seed + member reviews + anonymous ratings */}
         <div>
