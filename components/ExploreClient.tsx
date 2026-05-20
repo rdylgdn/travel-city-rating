@@ -18,7 +18,13 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "reviews", label: "Most reviewed" },
 ];
 
-export default function ExploreClient({ cities }: { cities: City[] }) {
+type ExploreProps = {
+  cities: City[];
+  reviewCounts?: Record<string, number>;
+  anonCounts?: Record<string, number>;
+};
+
+export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {} }: ExploreProps) {
   const [query, setQuery] = useState("");
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -220,7 +226,13 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((city) => (
-                <CityCard key={city.id} city={city} budgetMode={budgetMode} />
+                <CityCard
+                  key={city.id}
+                  city={city}
+                  budgetMode={budgetMode}
+                  liveReviewCount={reviewCounts[city.slug]}
+                  liveAnonCount={anonCounts[city.slug]}
+                />
               ))}
             </div>
           </>

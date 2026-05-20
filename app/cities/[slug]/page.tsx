@@ -135,7 +135,9 @@ export default async function CityPage({ params, searchParams }: Props) {
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4 text-white/80" />
-              <span className="text-white/80 text-sm">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</span>
+              <span className="text-white/80 text-sm">
+                {reviews.length + anonScores.length} {(reviews.length + anonScores.length) === 1 ? "rating" : "ratings"}
+              </span>
             </div>
           </div>
         </div>

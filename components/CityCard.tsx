@@ -12,10 +12,14 @@ import { useSavedCities } from "@/contexts/SavedCitiesContext";
 type Props = {
   city: City;
   budgetMode: BudgetMode;
+  liveReviewCount?: number;
+  liveAnonCount?: number;
 };
 
-export default function CityCard({ city, budgetMode }: Props) {
+export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount }: Props) {
   const dailyBudget = city.dailyBudget[budgetMode];
+  const reviewCount = liveReviewCount ?? city.reviewCount;
+  const totalCount = reviewCount + (liveAnonCount ?? 0);
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
   const isSaved = saved.has(city.slug);
@@ -129,7 +133,7 @@ export default function CityCard({ city, budgetMode }: Props) {
               </div>
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>{city.bestSeason}</span>
-                <span>{city.reviewCount} reviews</span>
+                <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
               </div>
             </div>
           </div>

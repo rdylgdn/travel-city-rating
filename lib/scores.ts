@@ -1,6 +1,6 @@
 import { City } from "./types";
 
-const SEED_WEIGHT = 10;
+const SEED_WEIGHT = 100;
 const ANON_WEIGHT = 0.1; // 1/10th of a member review
 
 type DbReview = {
