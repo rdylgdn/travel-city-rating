@@ -41,14 +41,11 @@ export default async function CityPage({ params, searchParams }: Props) {
   const initialBudgetMode: BudgetMode =
     validModes.includes(budget as BudgetMode) ? (budget as BudgetMode) : "budget";
 
-  // Fetch reviews + auth in parallel
   const supabase = await createClient();
+
+  // Fetch reviews and auth separately — no join since reviews→profiles has no direct FK
   const [{ data: dbReviews }, { data: { user } }] = await Promise.all([
-    supabase
-      .from("reviews")
-      .select("*, profiles(display_name, avatar_url, home_country, home_country_flag, travel_styles)")
-      .eq("city_slug", slug)
-      .order("created_at", { ascending: false }),
+    supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
     supabase.auth.getUser(),
   ]);
 
@@ -56,14 +53,19 @@ export default async function CityPage({ params, searchParams }: Props) {
   const blended = blendScores(city, reviews);
   const userReview = user ? reviews.find((r: { user_id: string }) => r.user_id === user.id) : null;
 
-  // Fetch visited country counts for all reviewers to compute badges
+  // Fetch profiles + visited counts for all reviewers in parallel
   const reviewerIds = [...new Set(reviews.map((r: { user_id: string }) => r.user_id))];
+  let profilesMap: Record<string, Record<string, unknown>> = {};
   let visitedCountPerUser: Record<string, number> = {};
+
   if (reviewerIds.length > 0) {
-    const { data: visitedRows } = await supabase
-      .from("visited_cities")
-      .select("user_id, city_slug")
-      .in("user_id", reviewerIds);
+    const [{ data: profileRows }, { data: visitedRows }] = await Promise.all([
+      supabase.from("profiles").select("id, display_name, avatar_url, home_country, home_country_flag, travel_styles").in("id", reviewerIds),
+      supabase.from("visited_cities").select("user_id, city_slug").in("user_id", reviewerIds),
+    ]);
+
+    profilesMap = Object.fromEntries((profileRows ?? []).map((p) => [p.id, p]));
+
     const countriesPerUser: Record<string, Set<string>> = {};
     for (const row of (visitedRows ?? [])) {
       const c = allCities.find((x) => x.slug === row.city_slug);
@@ -79,7 +81,7 @@ export default async function CityPage({ params, searchParams }: Props) {
   // Build review profiles
   const reviewProfiles: Record<string, ReviewProfile> = {};
   for (const r of reviews) {
-    const p = (r as { profiles?: Record<string, unknown> | null }).profiles;
+    const p = profilesMap[r.user_id];
     reviewProfiles[r.id] = {
       displayName: (p?.display_name as string) ?? r.user_email?.split("@")[0] ?? "Traveler",
       avatarUrl: (p?.avatar_url as string) ?? null,
