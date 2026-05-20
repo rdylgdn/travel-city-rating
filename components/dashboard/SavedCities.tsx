@@ -1,14 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
 import { City, BudgetMode } from "@/lib/types";
 import { scoreColor, budgetLabel } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Props = {
   cities: { city: City; budgetMode: BudgetMode }[];
 };
 
 export default function SavedCities({ cities }: Props) {
+  const { format } = useCurrency();
+
   if (cities.length === 0) {
     return (
       <div className="text-center py-16">
@@ -54,7 +59,7 @@ export default function SavedCities({ cities }: Props) {
           <div className="p-3">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-sm font-semibold text-gray-800">
-                ${city.dailyBudget[budgetMode]}/day
+                {format(city.dailyBudget[budgetMode])}/day
               </span>
               <span className="text-xs px-2 py-0.5 bg-rose-50 text-rose-500 rounded-full font-medium">
                 {budgetLabel(budgetMode)}

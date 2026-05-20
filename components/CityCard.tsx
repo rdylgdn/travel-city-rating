@@ -8,6 +8,7 @@ import { City, BudgetMode } from "@/lib/types";
 import { cn, scoreColor, budgetLabel } from "@/lib/utils";
 import AuthModal from "./AuthModal";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Props = {
   city: City;
@@ -20,6 +21,7 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
   const dailyBudget = city.dailyBudget[budgetMode];
   const reviewCount = liveReviewCount ?? city.reviewCount;
   const totalCount = reviewCount + (liveAnonCount ?? 0);
+  const { format } = useCurrency();
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
   const isSaved = saved.has(city.slug);
@@ -120,7 +122,7 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-semibold text-gray-800">${dailyBudget}/day</span>
+                  <span className="text-sm font-semibold text-gray-800">{format(dailyBudget)}/day</span>
                 </div>
                 <span className="text-xs text-gray-400">{budgetLabel(budgetMode)}</span>
               </div>

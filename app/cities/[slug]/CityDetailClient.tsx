@@ -7,6 +7,7 @@ import { budgetLabel, cn } from "@/lib/utils";
 import AuthModal from "@/components/AuthModal";
 import BudgetModeSelector from "@/components/BudgetModeSelector";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Props = {
   citySlug: string;
@@ -21,6 +22,7 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(initialBudgetMode);
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
+  const { format } = useCurrency();
   const isSaved = saved.has(citySlug);
   const isVisited = visited.has(citySlug);
 
@@ -85,7 +87,7 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
             { label: "Score", value: `${city.scores.overall.toFixed(1)}/10`, highlight: false },
-            { label: "Budget", value: `$${dailyBudget}/day`, highlight: true },
+            { label: "Budget", value: `${format(dailyBudget)}/day`, highlight: true },
             { label: "Best season", value: city.bestSeason, highlight: false },
             { label: "Ratings", value: String(totalRatings ?? 0), highlight: false },
             { label: "Reviews", value: String(memberReviews ?? 0), highlight: false },
@@ -102,15 +104,15 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
 
       <div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">Budget breakdown</h2>
-        <p className="text-sm text-gray-400 mb-3">{budgetLabel(budgetMode)} · USD/day</p>
+        <p className="text-sm text-gray-400 mb-3">{budgetLabel(budgetMode)} · per day</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {Object.entries(city.budgetBreakdown).map(([key, val]) => {
             const ratio = dailyBudget / city.dailyBudget.budget;
-            const scaled = Math.round(val * ratio);
+            const scaled = val * ratio;
             return (
               <div key={key} className="bg-gray-50 rounded-xl p-3">
                 <p className="text-xs text-gray-400 capitalize mb-1">{key}</p>
-                <p className="font-semibold text-gray-800">${scaled}/day</p>
+                <p className="font-semibold text-gray-800">{format(scaled)}/day</p>
               </div>
             );
           })}
