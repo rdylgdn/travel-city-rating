@@ -19,7 +19,7 @@ export default function ReviewsGate({ reviewCount }: Props) {
 
   return (
     <>
-      <div className="relative rounded-2xl overflow-hidden border border-gray-100">
+      <div className="relative rounded-2xl overflow-hidden border border-gray-100 min-h-[340px]">
         {/* Blurred preview rows */}
         <div className="blur-sm pointer-events-none select-none p-4 space-y-3">
           {[...Array(Math.min(reviewCount, 2))].map((_, i) => (
@@ -45,7 +45,7 @@ export default function ReviewsGate({ reviewCount }: Props) {
         </div>
 
         {/* Gradient overlay + CTA */}
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent flex flex-col items-center justify-end pb-6 px-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-white from-50% via-white/90 to-transparent flex flex-col items-center justify-center pb-4 px-4">
           <div className="text-center max-w-sm">
             <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-3">
               <Lock className="w-5 h-5 text-rose-400" />
