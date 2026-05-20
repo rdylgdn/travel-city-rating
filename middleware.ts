@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -25,15 +27,23 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — must not run logic between createServerClient and getUser
   const { data: { user } } = await supabase.auth.getUser();
 
+  const { pathname } = request.nextUrl;
+
   // Redirect unauthenticated users away from /dashboard
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  if (!user && pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.searchParams.set("auth", "signin");
     return NextResponse.redirect(url);
+  }
+
+  // Restrict /admin to the admin email only
+  if (pathname.startsWith("/admin")) {
+    if (!user || user.email !== ADMIN_EMAIL) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return supabaseResponse;

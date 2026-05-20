@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import { User, LogOut, LayoutDashboard, ChevronDown, ShieldCheck } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
 import AuthModal from "./AuthModal";
@@ -80,6 +80,16 @@ export default function HeaderAuth() {
                 <LayoutDashboard className="w-4 h-4 text-gray-400" />
                 Dashboard
               </Link>
+              {user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                <Link
+                  href="/admin"
+                  onClick={() => setShowDropdown(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4 text-rose-400" />
+                  Admin
+                </Link>
+              )}
               <hr className="my-1 border-gray-100" />
               <button
                 onClick={handleSignOut}
