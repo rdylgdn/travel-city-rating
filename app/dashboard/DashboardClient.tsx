@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Star, Settings, Sliders, MapPin, CheckCircle2 } from "lucide-react";
+import { Bookmark, Star, Settings, Sliders, CheckCircle2, Globe } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
 import { UserProfile } from "@/lib/mock-user";
 import SavedCities from "@/components/dashboard/SavedCities";
@@ -9,6 +9,7 @@ import VisitedCities from "@/components/dashboard/VisitedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
 import TravelPreferences from "@/components/dashboard/TravelPreferences";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
+import CountriesModal from "@/components/dashboard/CountriesModal";
 import { cn } from "@/lib/utils";
 
 type Tab = "saved" | "visited" | "reviews" | "preferences" | "settings";
@@ -29,8 +30,13 @@ type Props = {
   stats: { savedCount: number; reviewCount: number; visitedCount: number };
 };
 
+const TOTAL_COUNTRIES = 195;
+
 export default function DashboardClient({ user, savedCities, visitedCities, reviews, stats }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("saved");
+  const [showMap, setShowMap] = useState(false);
+
+  const visitedCountryCount = new Set(visitedCities.map((c) => c.countryIso)).size;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -46,18 +52,27 @@ export default function DashboardClient({ user, savedCities, visitedCities, revi
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        {[
-          { label: "Saved", value: stats.savedCount, icon: Bookmark, color: "text-rose-400", onClick: () => setActiveTab("saved") },
-          { label: "Visited", value: stats.visitedCount, icon: CheckCircle2, color: "text-green-500", onClick: () => setActiveTab("visited") },
-          { label: "Reviews", value: stats.reviewCount, icon: Star, color: "text-yellow-500", onClick: () => setActiveTab("reviews") },
-        ].map(({ label, value, icon: Icon, color, onClick }) => (
-          <button key={label} onClick={onClick} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition-colors">
-            <Icon className={`w-4 h-4 ${color} mx-auto mb-1`} />
-            <p className="text-2xl font-bold text-gray-800">{value}</p>
-            <p className="text-xs text-gray-400">{label}</p>
-          </button>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <button onClick={() => setActiveTab("saved")} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition-colors">
+          <Bookmark className="w-4 h-4 text-rose-400 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-800">{stats.savedCount}</p>
+          <p className="text-xs text-gray-400">Saved</p>
+        </button>
+        <button onClick={() => setActiveTab("visited")} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition-colors">
+          <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-800">{stats.visitedCount}</p>
+          <p className="text-xs text-gray-400">Cities visited</p>
+        </button>
+        <button onClick={() => setShowMap(true)} className="bg-green-50 rounded-xl p-4 text-center hover:bg-green-100 transition-colors group">
+          <Globe className="w-4 h-4 text-green-600 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-green-700">{visitedCountryCount}<span className="text-sm text-green-400 font-normal"> / {TOTAL_COUNTRIES}</span></p>
+          <p className="text-xs text-green-500 font-medium">Countries · View map</p>
+        </button>
+        <button onClick={() => setActiveTab("reviews")} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition-colors">
+          <Star className="w-4 h-4 text-yellow-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold text-gray-800">{stats.reviewCount}</p>
+          <p className="text-xs text-gray-400">Reviews</p>
+        </button>
       </div>
 
       {/* Tabs */}
@@ -89,6 +104,10 @@ export default function DashboardClient({ user, savedCities, visitedCities, revi
       {activeTab === "reviews" && <MyReviews reviews={reviews} />}
       {activeTab === "preferences" && <TravelPreferences user={user} />}
       {activeTab === "settings" && <ProfileSettings user={user} />}
+
+      {showMap && (
+        <CountriesModal visitedCities={visitedCities} onClose={() => setShowMap(false)} />
+      )}
     </div>
   );
 }

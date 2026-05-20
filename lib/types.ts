@@ -32,6 +32,7 @@ export type City = {
   slug: string;
   name: string;
   country: string;
+  countryIso: string; // ISO 3166-1 numeric code, matches world-atlas TopoJSON IDs
   region: Region;
   imageUrl: string;
   summary: string;
