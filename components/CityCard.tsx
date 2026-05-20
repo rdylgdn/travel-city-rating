@@ -132,7 +132,7 @@ export default function CityCard({ city, budgetMode }: Props) {
                 <div className="flex items-center gap-2">
                   {isSaved && <span className="text-rose-400 font-medium">Saved</span>}
                   {isVisited && <span className="text-green-500 font-medium">Visited</span>}
-                  {!isSaved && !isVisited && <span>{city.reviewCount} reviews</span>}
+                  <span>{city.reviewCount} reviews</span>
                 </div>
               </div>
             </div>
