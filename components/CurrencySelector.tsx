@@ -78,12 +78,13 @@ export default function CurrencySelector() {
                   key={c.code}
                   onClick={() => handleSelect(c.code)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-50 transition-colors",
+                    "w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors",
                     currency === c.code ? "text-rose-600 font-semibold bg-rose-50" : "text-gray-700"
                   )}
                 >
-                  <span>{c.code} — {c.name}</span>
-                  <span className="text-gray-400 font-medium">{c.symbol.trim()}</span>
+                  <span className="shrink-0 font-semibold w-8 text-left">{c.code.slice(0,3)}</span>
+                  <span className="flex-1 text-left truncate text-gray-500 font-normal">{c.name}</span>
+                  <span className="shrink-0 text-gray-400 font-medium text-right w-8">{c.symbol.trim()}</span>
                 </button>
               ))}
             </div>
