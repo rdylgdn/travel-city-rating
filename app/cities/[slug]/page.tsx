@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { MapPin, Calendar, Star, Users } from "lucide-react";
-import { cities, reviews } from "@/lib/seed-data";
+import { MapPin, Star, Users, Calendar } from "lucide-react";
+import { cities } from "@/lib/seed-data";
+import { createClient } from "@/utils/supabase/server";
+import { blendScores } from "@/lib/scores";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
+import ReviewForm from "@/components/ReviewForm";
 import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
 import { BudgetMode } from "@/lib/types";
@@ -35,7 +38,16 @@ export default async function CityPage({ params, searchParams }: Props) {
   const initialBudgetMode: BudgetMode =
     validModes.includes(budget as BudgetMode) ? (budget as BudgetMode) : "budget";
 
-  const cityReviews = reviews.filter((r) => r.cityId === city.id);
+  // Fetch reviews + auth in parallel
+  const supabase = await createClient();
+  const [{ data: dbReviews }, { data: { user } }] = await Promise.all([
+    supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
+    supabase.auth.getUser(),
+  ]);
+
+  const reviews = dbReviews ?? [];
+  const blended = blendScores(city, reviews);
+  const userReview = user ? reviews.find((r) => r.user_id === user.id) : null;
 
   const scoreLabels: [keyof typeof city.scores, string][] = [
     ["overall", "Overall"],
@@ -52,24 +64,15 @@ export default async function CityPage({ params, searchParams }: Props) {
     <div className="pb-16">
       {/* Hero */}
       <div className="relative h-72 sm:h-96 w-full">
-        <Image
-          src={city.imageUrl}
-          alt={city.name}
-          fill
-          className="object-cover"
-          priority
-        />
+        <Image src={city.imageUrl} alt={city.name} fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        {/* Save button — client island */}
         <div className="absolute top-4 right-4 z-10">
           <CityDetailClient citySlug={city.slug} initialBudgetMode={initialBudgetMode} heroOnly />
         </div>
         <div className="absolute bottom-6 left-4 right-4 max-w-4xl mx-auto">
           <div className="flex flex-wrap gap-1.5 mb-2">
             {city.bestFor.map((tag) => (
-              <span key={tag} className="text-xs px-2 py-0.5 bg-rose-500/90 text-white rounded-full font-medium">
-                {tag}
-              </span>
+              <span key={tag} className="text-xs px-2 py-0.5 bg-rose-500/90 text-white rounded-full font-medium">{tag}</span>
             ))}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white">{city.name}</h1>
@@ -80,28 +83,33 @@ export default async function CityPage({ params, searchParams }: Props) {
             </div>
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className={`text-sm font-bold ${scoreColor(city.scores.overall)} bg-white/90 px-1.5 py-0.5 rounded`}>
-                {city.scores.overall.toFixed(1)}
+              <span className={`text-sm font-bold ${scoreColor(blended.overall)} bg-white/90 px-1.5 py-0.5 rounded`}>
+                {blended.overall.toFixed(1)}
               </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4 text-white/80" />
+              <span className="text-white/80 text-sm">{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 mt-6 space-y-8">
-        {/* Snapshot + budget mode selector */}
-        <CityDetailClient
-          citySlug={city.slug}
-          initialBudgetMode={initialBudgetMode}
-          city={city}
-        />
+        {/* Snapshot + budget */}
+        <CityDetailClient citySlug={city.slug} initialBudgetMode={initialBudgetMode} city={city} />
 
-        {/* Scores */}
+        {/* Scores — blended from seed + user reviews */}
         <div>
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Scores</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Scores</h2>
+            {reviews.length > 0 && (
+              <span className="text-xs text-gray-400">Based on {reviews.length} {reviews.length === 1 ? "review" : "reviews"} + editorial</span>
+            )}
+          </div>
           <div className="space-y-3">
             {scoreLabels.map(([key, label]) => (
-              <ScoreBar key={key} label={label} score={city.scores[key]} />
+              <ScoreBar key={key} label={label} score={blended[key]} />
             ))}
           </div>
         </div>
@@ -151,21 +159,52 @@ export default async function CityPage({ params, searchParams }: Props) {
         {/* Anonymous rating */}
         <AnonymousRatingWidget cityId={city.id} />
 
-        {/* Member reviews */}
+        {/* Reviews section */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">
-            Member reviews <span className="text-sm text-gray-400 font-normal">({cityReviews.length})</span>
+            Member reviews
+            <span className="text-sm text-gray-400 font-normal ml-2">({reviews.length})</span>
           </h2>
-          {cityReviews.length === 0 ? (
-            <p className="text-gray-400 text-sm">No reviews yet. Sign in to leave the first one.</p>
+
+          {/* Review form or login prompt */}
+          {user ? (
+            !userReview ? (
+              <div className="mb-6">
+                <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} />
+              </div>
+            ) : (
+              <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700">
+                You've already reviewed this city.
+              </div>
+            )
           ) : (
-            <div className="space-y-3">
-              {cityReviews.map((r) => <ReviewCard key={r.id} review={r} />)}
+            <div className="mb-6 border border-gray-100 rounded-xl px-4 py-4 flex items-center justify-between">
+              <p className="text-sm text-gray-500">Sign in to leave a review and influence this city's scores.</p>
             </div>
           )}
-          <button className="mt-4 w-full py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-rose-400 hover:text-rose-500 transition-all">
-            Sign in to write a review
-          </button>
+
+          {/* Reviews list */}
+          {reviews.length === 0 ? (
+            <p className="text-gray-400 text-sm">No reviews yet. Be the first!</p>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((r) => (
+                <ReviewCard key={r.id} review={{
+                  id: r.id,
+                  cityId: city.id,
+                  authorName: r.user_email?.split("@")[0] ?? "Traveler",
+                  travelStyle: r.travel_style,
+                  budgetCategory: r.budget_category,
+                  monthVisited: r.month_visited ?? "",
+                  overallRating: r.overall_rating,
+                  writtenReview: r.written_review ?? "",
+                  pros: r.pros ?? [],
+                  cons: r.cons ?? [],
+                  createdAt: r.created_at?.slice(0, 10) ?? "",
+                }} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
