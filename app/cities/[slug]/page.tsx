@@ -44,10 +44,18 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   const supabase = await createClient();
 
-  // Fetch reviews, anonymous ratings, and auth in parallel
-  const [{ data: dbReviews }, { data: anonData }, { data: { user } }] = await Promise.all([
+  // Fetch reviews, anonymous ratings, saved/visited counts, and auth in parallel
+  const [
+    { data: dbReviews },
+    { data: anonData },
+    { count: savedCount },
+    { count: visitedCount },
+    { data: { user } },
+  ] = await Promise.all([
     supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
     supabase.from("anonymous_ratings").select("overall_score").eq("city_slug", slug),
+    supabase.from("saved_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
+    supabase.from("visited_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
     supabase.auth.getUser(),
   ]);
 
@@ -147,6 +155,18 @@ export default async function CityPage({ params, searchParams }: Props) {
                 </span>
               </div>
             )}
+            {(savedCount ?? 0) > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="text-white/60 text-sm">·</span>
+                <span className="text-white/80 text-sm">{savedCount} saved</span>
+              </div>
+            )}
+            {(visitedCount ?? 0) > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="text-white/60 text-sm">·</span>
+                <span className="text-white/80 text-sm">{visitedCount} visited</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -159,6 +179,8 @@ export default async function CityPage({ params, searchParams }: Props) {
           city={city}
           totalRatings={reviews.length + anonScores.length}
           memberReviews={reviews.length}
+          savedCount={savedCount ?? 0}
+          visitedCount={visitedCount ?? 0}
         />
 
         {/* Scores — blended from seed + member reviews + anonymous ratings */}

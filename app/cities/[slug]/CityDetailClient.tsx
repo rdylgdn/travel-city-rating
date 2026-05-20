@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bookmark, CheckCircle2 } from "lucide-react";
+
 import { BudgetMode, City } from "@/lib/types";
 import { budgetLabel, cn } from "@/lib/utils";
 import AuthModal from "@/components/AuthModal";
@@ -14,11 +15,13 @@ type Props = {
   initialBudgetMode: BudgetMode;
   city?: City;
   heroOnly?: boolean;
-  totalRatings?: number;  // member reviews + anonymous
-  memberReviews?: number; // signed-in reviews only
+  totalRatings?: number;
+  memberReviews?: number;
+  savedCount?: number;
+  visitedCount?: number;
 };
 
-export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly, totalRatings, memberReviews }: Props) {
+export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly, totalRatings, memberReviews, savedCount = 0, visitedCount = 0 }: Props) {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(initialBudgetMode);
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
@@ -101,6 +104,23 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
           ))}
         </div>
       </div>
+
+      {(savedCount > 0 || visitedCount > 0) && (
+        <div className="flex items-center gap-4">
+          {savedCount > 0 && (
+            <div className="flex items-center gap-1.5 text-sm text-rose-500">
+              <Bookmark className="w-4 h-4 fill-rose-400" />
+              <span><strong>{savedCount}</strong> members saved this city</span>
+            </div>
+          )}
+          {visitedCount > 0 && (
+            <div className="flex items-center gap-1.5 text-sm text-green-600">
+              <CheckCircle2 className="w-4 h-4" />
+              <span><strong>{visitedCount}</strong> members visited</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div>
         <h2 className="text-lg font-bold text-gray-800 mb-1">Budget breakdown</h2>

@@ -22,9 +22,11 @@ type ExploreProps = {
   cities: City[];
   reviewCounts?: Record<string, number>;
   anonCounts?: Record<string, number>;
+  savedCounts?: Record<string, number>;
+  visitedCounts?: Record<string, number>;
 };
 
-export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {} }: ExploreProps) {
+export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {} }: ExploreProps) {
   const [query, setQuery] = useState("");
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -232,6 +234,8 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   budgetMode={budgetMode}
                   liveReviewCount={reviewCounts[city.slug]}
                   liveAnonCount={anonCounts[city.slug]}
+                  savedCount={savedCounts[city.slug] ?? 0}
+                  visitedCount={visitedCounts[city.slug] ?? 0}
                 />
               ))}
             </div>

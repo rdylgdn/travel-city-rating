@@ -15,9 +15,11 @@ type Props = {
   budgetMode: BudgetMode;
   liveReviewCount?: number;
   liveAnonCount?: number;
+  savedCount?: number;
+  visitedCount?: number;
 };
 
-export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount }: Props) {
+export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount, savedCount = 0, visitedCount = 0 }: Props) {
   const dailyBudget = city.dailyBudget[budgetMode];
   const reviewCount = liveReviewCount ?? city.reviewCount;
   const totalCount = reviewCount + (liveAnonCount ?? 0);
@@ -137,6 +139,22 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                 <span>{city.bestSeason}</span>
                 <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
               </div>
+              {(savedCount > 0 || visitedCount > 0) && (
+                <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50">
+                  {savedCount > 0 && (
+                    <span className="flex items-center gap-1 text-xs text-rose-400">
+                      <Bookmark className="w-3 h-3 fill-rose-400" />
+                      {savedCount} saved
+                    </span>
+                  )}
+                  {visitedCount > 0 && (
+                    <span className="flex items-center gap-1 text-xs text-green-500">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {visitedCount} visited
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </Link>
