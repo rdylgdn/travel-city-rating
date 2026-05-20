@@ -2,6 +2,7 @@ import DashboardClient from "./DashboardClient";
 import { createClient } from "@/utils/supabase/server";
 import { cities as allCities } from "@/lib/seed-data";
 import { BudgetMode, Review } from "@/lib/types";
+import { Profile } from "@/lib/profile";
 
 export const metadata = { title: "Dashboard — CityRate" };
 
@@ -14,12 +15,14 @@ export default async function DashboardPage() {
   let savedEntries: SavedCityEntry[] = [];
   let visitedSlugs: string[] = [];
   let userReviews: Review[] = [];
+  let profile: Profile | null = null;
 
   if (user) {
-    const [savedRes, visitedRes, reviewsRes] = await Promise.all([
+    const [savedRes, visitedRes, reviewsRes, profileRes] = await Promise.all([
       supabase.from("saved_cities").select("city_slug, budget_mode").eq("user_id", user.id),
       supabase.from("visited_cities").select("city_slug").eq("user_id", user.id),
       supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
     ]);
 
     savedEntries = (savedRes.data ?? []).map((r) => ({
@@ -34,7 +37,7 @@ export default async function DashboardPage() {
       return {
         id: r.id,
         cityId: city?.id ?? r.city_slug,
-        authorName: user.email?.split("@")[0] ?? "You",
+        authorName: profileRes.data?.display_name ?? user.email?.split("@")[0] ?? "You",
         travelStyle: r.travel_style,
         budgetCategory: r.budget_category,
         monthVisited: r.month_visited ?? "",
@@ -45,6 +48,8 @@ export default async function DashboardPage() {
         createdAt: r.created_at?.slice(0, 10) ?? "",
       } as Review;
     });
+
+    profile = profileRes.data ?? null;
   }
 
   const savedCities = savedEntries
@@ -58,13 +63,15 @@ export default async function DashboardPage() {
     .map((slug) => allCities.find((c) => c.slug === slug))
     .filter(Boolean) as (typeof allCities);
 
-  const displayName = user?.email?.split("@")[0] ?? "Traveler";
+  const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "Traveler";
   const displayEmail = user?.email ?? "";
 
   return (
     <DashboardClient
+      userId={user?.id ?? ""}
       displayName={displayName}
       displayEmail={displayEmail}
+      profile={profile}
       savedCities={savedCities}
       visitedCities={visitedCities}
       reviews={userReviews}
