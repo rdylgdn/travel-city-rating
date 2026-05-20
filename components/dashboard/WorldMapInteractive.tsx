@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
-import { Plus, Minus, RotateCcw, X, Loader2 } from "lucide-react";
+import { Plus, Minus, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
 import { City, BudgetMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -17,14 +17,6 @@ type Props = {
   savedCities: { city: City; budgetMode: BudgetMode }[];
 };
 
-type CountryInfo = {
-  name: string;
-  flag: string;
-  capital: string;
-  languages: string;
-  currency: string;
-};
-
 type SelectedCountry = {
   isoId: string;
   name: string;
@@ -37,8 +29,6 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
   const [center, setCenter] = useState<[number, number]>([0, 20]);
   const [selected, setSelected] = useState<SelectedCountry | null>(null);
   const [filterMode, setFilterMode] = useState<FilterMode>("visited");
-  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null);
-  const [loadingInfo, setLoadingInfo] = useState(false);
 
   const visitedByIso = visitedCities.reduce<Record<string, City[]>>((acc, city) => {
     if (!acc[city.countryIso]) acc[city.countryIso] = [];
@@ -54,38 +44,6 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
 
   const visitedCountryCount = Object.keys(visitedByIso).length;
   const savedCountryCount = Object.keys(savedByIso).length;
-
-  // Fetch country info for every clicked country
-  useEffect(() => {
-    if (!selected) return;
-    setLoadingInfo(true);
-    setCountryInfo(null);
-    // Zero-pad to 3 digits — RestCountries API requires it (e.g. 8 → 008)
-    const paddedIso = selected.isoId.padStart(3, "0");
-    fetch(`https://restcountries.com/v3.1/numericcode/${paddedIso}`)
-      .then((r) => { if (!r.ok) throw new Error("not found"); return r.json(); })
-      .then((data) => {
-        const c = Array.isArray(data) ? data[0] : null;
-        if (!c) throw new Error("empty");
-        const langs = c.languages
-          ? (Object.values(c.languages) as string[]).slice(0, 2).join(", ")
-          : "—";
-        const currencies = c.currencies ? Object.values(c.currencies) as { name: string; symbol?: string }[] : [];
-        const currObj = currencies[0];
-        const currency = currObj
-          ? `${currObj.name}${currObj.symbol ? ` (${currObj.symbol})` : ""}`
-          : "—";
-        setCountryInfo({
-          name: c.name?.common ?? selected.name,
-          flag: c.flag ?? "",
-          capital: Array.isArray(c.capital) && c.capital.length > 0 ? c.capital[0] : "—",
-          languages: langs || "—",
-          currency,
-        });
-      })
-      .catch(() => setCountryInfo(null))
-      .finally(() => setLoadingInfo(false));
-  }, [selected?.isoId]);
 
   const handleCountryClick = useCallback((isoId: string, name: string) => {
     const visited = visitedByIso[isoId] ?? [];
@@ -231,38 +189,13 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
         {selected && (
           <div className="w-64 border-l border-gray-100 bg-white flex flex-col shrink-0 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800 text-sm truncate">
-                {countryInfo?.name ?? selected.name}
-              </h3>
+              <h3 className="font-semibold text-gray-800 text-sm truncate">{selected.name}</h3>
               <button onClick={() => setSelected(null)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
 
             <div className="p-4 space-y-4 overflow-y-auto">
-
-              {/* Country info — always shown for every country */}
-              {loadingInfo ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="w-4 h-4 text-gray-300 animate-spin" />
-                </div>
-              ) : countryInfo ? (
-                <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
-                  <span className="text-3xl leading-none mt-0.5">{countryInfo.flag}</span>
-                  <div className="space-y-1.5 min-w-0">
-                    {[
-                      { label: "Capital", value: countryInfo.capital },
-                      { label: "Language", value: countryInfo.languages },
-                      { label: "Currency", value: countryInfo.currency },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex gap-1.5">
-                        <span className="text-xs text-gray-400 shrink-0">{label}:</span>
-                        <span className="text-xs text-gray-600">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
 
               {/* Visited cities — only if any */}
               {selected.visited.length > 0 && (
