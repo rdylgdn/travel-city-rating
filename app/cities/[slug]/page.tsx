@@ -5,6 +5,7 @@ import { cities, reviews } from "@/lib/seed-data";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
+import SaveButton from "@/components/SaveButton";
 import { scoreColor } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -50,6 +51,9 @@ export default async function CityPage({ params }: Props) {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute top-4 right-4">
+          <SaveButton citySlug={city.slug} />
+        </div>
         <div className="absolute bottom-6 left-4 right-4 max-w-4xl mx-auto">
           <div className="flex flex-wrap gap-1.5 mb-2">
             {city.bestFor.map((tag) => (
