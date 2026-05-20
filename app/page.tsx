@@ -10,12 +10,13 @@ export default async function HomePage() {
     supabase.from("anonymous_ratings").select("city_slug"),
   ]);
 
-  const reviewCounts: Record<string, number> = {};
+  // Initialise every city to 0 so seed data fake counts are never used as fallback
+  const reviewCounts: Record<string, number> = Object.fromEntries(cities.map((c) => [c.slug, 0]));
   for (const r of (reviewRows ?? [])) {
     reviewCounts[r.city_slug] = (reviewCounts[r.city_slug] ?? 0) + 1;
   }
 
-  const anonCounts: Record<string, number> = {};
+  const anonCounts: Record<string, number> = Object.fromEntries(cities.map((c) => [c.slug, 0]));
   for (const r of (anonRows ?? [])) {
     anonCounts[r.city_slug] = (anonCounts[r.city_slug] ?? 0) + 1;
   }
