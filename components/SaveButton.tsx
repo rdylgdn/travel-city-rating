@@ -1,38 +1,26 @@
 "use client";
 
 import { Bookmark } from "lucide-react";
-import { useSavedCities } from "@/hooks/useSavedCities";
-import { BudgetMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  citySlug: string;
-  budgetMode?: BudgetMode;
-  onNeedAuth?: () => void;
+  isSaved: boolean;
+  loading?: boolean;
+  onToggle: (e: React.MouseEvent) => void;
   className?: string;
 };
 
-export default function SaveButton({ citySlug, budgetMode = "budget", onNeedAuth, className }: Props) {
-  const { saved, toggle, loading } = useSavedCities();
-  const isSaved = saved.has(citySlug);
-
-  async function handleClick(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    const result = await toggle(citySlug, budgetMode);
-    if (result === "unauthenticated") onNeedAuth?.();
-  }
-
+export default function SaveButton({ isSaved, loading, onToggle, className }: Props) {
   return (
     <button
-      onClick={handleClick}
+      onClick={onToggle}
       title={isSaved ? "Remove from saved" : "Save city"}
       className={cn(
-        "p-2 rounded-full transition-all",
+        "p-2 rounded-full transition-all shadow-sm",
         loading && "opacity-0 pointer-events-none",
         isSaved
-          ? "bg-rose-500 text-white hover:bg-rose-600 shadow-sm"
-          : "bg-white/90 text-gray-400 hover:text-rose-500 hover:bg-white shadow-sm",
+          ? "bg-rose-500 text-white hover:bg-rose-600"
+          : "bg-white/90 text-gray-400 hover:text-rose-500 hover:bg-white",
         className
       )}
     >

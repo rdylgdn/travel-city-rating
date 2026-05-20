@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { BudgetMode } from "@/lib/types";
 
-type SavedEntry = { slug: string; budgetMode: BudgetMode };
+type SavedCitiesContextValue = {
+  saved: Map<string, BudgetMode>;
+  toggle: (slug: string, budgetMode: BudgetMode) => Promise<"saved" | "unsaved" | "unauthenticated">;
+  loading: boolean;
+  isLoggedIn: boolean;
+};
 
-export function useSavedCities() {
+const SavedCitiesContext = createContext<SavedCitiesContextValue>({
+  saved: new Map(),
+  toggle: async () => "unauthenticated",
+  loading: true,
+  isLoggedIn: false,
+});
+
+export function SavedCitiesProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const [saved, setSaved] = useState<Map<string, BudgetMode>>(new Map());
   const [userId, setUserId] = useState<string | null>(null);
@@ -42,13 +54,12 @@ export function useSavedCities() {
 
   const toggle = useCallback(async (
     citySlug: string,
-    budgetMode: BudgetMode = "budget"
+    budgetMode: BudgetMode
   ): Promise<"saved" | "unsaved" | "unauthenticated"> => {
     if (!userId) return "unauthenticated";
 
     const isSaved = saved.has(citySlug);
 
-    // Optimistic update
     setSaved((prev) => {
       const next = new Map(prev);
       isSaved ? next.delete(citySlug) : next.set(citySlug, budgetMode);
@@ -56,19 +67,23 @@ export function useSavedCities() {
     });
 
     if (isSaved) {
-      await supabase
-        .from("saved_cities")
-        .delete()
-        .eq("user_id", userId)
-        .eq("city_slug", citySlug);
+      await supabase.from("saved_cities").delete()
+        .eq("user_id", userId).eq("city_slug", citySlug);
     } else {
-      await supabase
-        .from("saved_cities")
+      await supabase.from("saved_cities")
         .insert({ user_id: userId, city_slug: citySlug, budget_mode: budgetMode });
     }
 
     return isSaved ? "unsaved" : "saved";
   }, [userId, saved]);
 
-  return { saved, toggle, loading, isLoggedIn: !!userId };
+  return (
+    <SavedCitiesContext.Provider value={{ saved, toggle, loading, isLoggedIn: !!userId }}>
+      {children}
+    </SavedCitiesContext.Provider>
+  );
+}
+
+export function useSavedCities() {
+  return useContext(SavedCitiesContext);
 }

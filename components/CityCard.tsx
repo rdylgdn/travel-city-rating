@@ -8,6 +8,7 @@ import { City, BudgetMode } from "@/lib/types";
 import { cn, scoreColor, budgetLabel } from "@/lib/utils";
 import SaveButton from "./SaveButton";
 import AuthModal from "./AuthModal";
+import { useSavedCities } from "@/contexts/SavedCitiesContext";
 
 type Props = {
   city: City;
@@ -17,10 +18,19 @@ type Props = {
 export default function CityCard({ city, budgetMode }: Props) {
   const dailyBudget = city.dailyBudget[budgetMode];
   const [showAuth, setShowAuth] = useState(false);
+  const { saved, toggle, loading } = useSavedCities();
+  const isSaved = saved.has(city.slug);
+
+  async function handleSave(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    // budgetMode is directly in scope here — always the current value
+    const result = await toggle(city.slug, budgetMode);
+    if (result === "unauthenticated") setShowAuth(true);
+  }
 
   return (
     <>
-      {/* Wrapper is relative so SaveButton can float above the Link */}
       <div className="relative group">
         <Link href={`/cities/${city.slug}?budget=${budgetMode}`} className="block">
           <div className="rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
@@ -47,7 +57,6 @@ export default function CityCard({ city, budgetMode }: Props) {
                 </div>
               </div>
             </div>
-
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1">
@@ -71,13 +80,8 @@ export default function CityCard({ city, budgetMode }: Props) {
           </div>
         </Link>
 
-        {/* SaveButton sits outside the Link so clicks don't navigate */}
         <div className="absolute top-2 right-2 z-10">
-          <SaveButton
-            citySlug={city.slug}
-            budgetMode={budgetMode}
-            onNeedAuth={() => setShowAuth(true)}
-          />
+          <SaveButton isSaved={isSaved} loading={loading} onToggle={handleSave} />
         </div>
       </div>
 
