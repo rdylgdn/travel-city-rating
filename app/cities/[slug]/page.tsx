@@ -5,13 +5,15 @@ import { cities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import { blendScores } from "@/lib/scores";
 import ScoreBar from "@/components/ScoreBar";
-import ReviewCard from "@/components/ReviewCard";
+import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewForm from "@/components/ReviewForm";
 import ReviewSignInPrompt from "@/components/ReviewSignInPrompt";
 import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
 import { BudgetMode } from "@/lib/types";
+import { getTravelerBadge } from "@/lib/profile";
+import { cities as allCities } from "@/lib/seed-data";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -42,13 +44,51 @@ export default async function CityPage({ params, searchParams }: Props) {
   // Fetch reviews + auth in parallel
   const supabase = await createClient();
   const [{ data: dbReviews }, { data: { user } }] = await Promise.all([
-    supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
+    supabase
+      .from("reviews")
+      .select("*, profiles(display_name, avatar_url, home_country, home_country_flag, travel_styles)")
+      .eq("city_slug", slug)
+      .order("created_at", { ascending: false }),
     supabase.auth.getUser(),
   ]);
 
   const reviews = dbReviews ?? [];
   const blended = blendScores(city, reviews);
-  const userReview = user ? reviews.find((r) => r.user_id === user.id) : null;
+  const userReview = user ? reviews.find((r: { user_id: string }) => r.user_id === user.id) : null;
+
+  // Fetch visited country counts for all reviewers to compute badges
+  const reviewerIds = [...new Set(reviews.map((r: { user_id: string }) => r.user_id))];
+  let visitedCountPerUser: Record<string, number> = {};
+  if (reviewerIds.length > 0) {
+    const { data: visitedRows } = await supabase
+      .from("visited_cities")
+      .select("user_id, city_slug")
+      .in("user_id", reviewerIds);
+    const countriesPerUser: Record<string, Set<string>> = {};
+    for (const row of (visitedRows ?? [])) {
+      const c = allCities.find((x) => x.slug === row.city_slug);
+      if (!c) continue;
+      if (!countriesPerUser[row.user_id]) countriesPerUser[row.user_id] = new Set();
+      countriesPerUser[row.user_id].add(c.countryIso);
+    }
+    visitedCountPerUser = Object.fromEntries(
+      Object.entries(countriesPerUser).map(([uid, isos]) => [uid, isos.size])
+    );
+  }
+
+  // Build review profiles
+  const reviewProfiles: Record<string, ReviewProfile> = {};
+  for (const r of reviews) {
+    const p = (r as { profiles?: Record<string, unknown> | null }).profiles;
+    reviewProfiles[r.id] = {
+      displayName: (p?.display_name as string) ?? r.user_email?.split("@")[0] ?? "Traveler",
+      avatarUrl: (p?.avatar_url as string) ?? null,
+      homeCountry: (p?.home_country as string) ?? null,
+      homeFlag: (p?.home_country_flag as string) ?? null,
+      travelStyles: (p?.travel_styles as string[]) ?? [],
+      badge: getTravelerBadge(visitedCountPerUser[r.user_id] ?? 0),
+    };
+  }
 
   const scoreLabels: [keyof typeof city.scores, string][] = [
     ["overall", "Overall"],
@@ -190,10 +230,10 @@ export default async function CityPage({ params, searchParams }: Props) {
           ) : (
             <div className="space-y-3">
               {reviews.map((r) => (
-                <ReviewCard key={r.id} review={{
+                <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={{
                   id: r.id,
                   cityId: city.id,
-                  authorName: r.user_email?.split("@")[0] ?? "Traveler",
+                  authorName: reviewProfiles[r.id]?.displayName ?? "Traveler",
                   travelStyle: r.travel_style,
                   budgetCategory: r.budget_category,
                   monthVisited: r.month_visited ?? "",
