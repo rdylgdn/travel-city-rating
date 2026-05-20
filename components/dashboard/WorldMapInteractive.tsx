@@ -54,13 +54,9 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
   const visitedCountryCount = Object.keys(visitedByIso).length;
   const savedCountryCount = Object.keys(savedByIso).length;
 
-  // Fetch generic country info when a country with no cities is selected
+  // Fetch country info for every clicked country
   useEffect(() => {
     if (!selected) return;
-    if (selected.visited.length > 0 || selected.saved.length > 0) {
-      setCountryInfo(null);
-      return;
-    }
     setLoadingInfo(true);
     setCountryInfo(null);
     fetch(`https://restcountries.com/v3.1/numericcode/${selected.isoId}`)
@@ -231,7 +227,32 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
             </div>
 
             <div className="p-4 space-y-4 overflow-y-auto">
-              {/* Visited cities — always first */}
+
+              {/* Country info — always shown for every country */}
+              {loadingInfo ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-4 h-4 text-gray-300 animate-spin" />
+                </div>
+              ) : countryInfo ? (
+                <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
+                  <span className="text-3xl leading-none mt-0.5">{countryInfo.flag}</span>
+                  <div className="space-y-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700">{selected.name}</p>
+                    {[
+                      { label: "Capital", value: countryInfo.capital },
+                      { label: "Language", value: countryInfo.languages },
+                      { label: "Currency", value: countryInfo.currency },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex gap-1.5">
+                        <span className="text-xs text-gray-400 shrink-0">{label}:</span>
+                        <span className="text-xs text-gray-600 truncate">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Visited cities — only if any */}
               {selected.visited.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-2">
@@ -250,7 +271,7 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
                 </div>
               )}
 
-              {/* Saved cities — always after visited */}
+              {/* Saved cities — only if any (excluding already-visited) */}
               {selected.saved.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-rose-500 uppercase tracking-wide mb-2">
@@ -267,31 +288,6 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Generic country info for unrelated countries */}
-              {selected.visited.length === 0 && selected.saved.length === 0 && (
-                loadingInfo ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
-                  </div>
-                ) : countryInfo ? (
-                  <div className="space-y-4">
-                    <div className="text-5xl text-center pt-2">{countryInfo.flag}</div>
-                    <div className="space-y-2.5">
-                      {[
-                        { label: "Capital", value: countryInfo.capital },
-                        { label: "Language", value: countryInfo.languages },
-                        { label: "Currency", value: countryInfo.currency },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="flex justify-between items-start gap-2">
-                          <span className="text-xs text-gray-400 shrink-0">{label}</span>
-                          <span className="text-xs font-medium text-gray-700 text-right">{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null
               )}
             </div>
           </div>
