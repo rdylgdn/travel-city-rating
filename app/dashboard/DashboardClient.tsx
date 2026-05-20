@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Star, Settings, Sliders, CheckCircle2, Globe } from "lucide-react";
+import { Bookmark, Star, Settings, CheckCircle2, Globe } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
 import SavedCities from "@/components/dashboard/SavedCities";
 import VisitedCities from "@/components/dashboard/VisitedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
-import TravelPreferences from "@/components/dashboard/TravelPreferences";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import CountriesModal from "@/components/dashboard/CountriesModal";
 import { cn } from "@/lib/utils";
 
-type Tab = "saved" | "visited" | "reviews" | "preferences" | "settings";
+type Tab = "saved" | "visited" | "reviews" | "settings";
 
 const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "saved", label: "Saved", icon: Bookmark },
   { id: "visited", label: "Visited", icon: CheckCircle2 },
   { id: "reviews", label: "My reviews", icon: Star },
-  { id: "preferences", label: "Preferences", icon: Sliders },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -102,7 +100,6 @@ export default function DashboardClient({ displayName, displayEmail, savedCities
       {activeTab === "saved" && <SavedCities cities={savedCities} />}
       {activeTab === "visited" && <VisitedCities cities={visitedCities} />}
       {activeTab === "reviews" && <MyReviews reviews={reviews} />}
-      {activeTab === "preferences" && <TravelPreferences displayName={displayName} displayEmail={displayEmail} />}
       {activeTab === "settings" && <ProfileSettings displayName={displayName} displayEmail={displayEmail} />}
 
       {showMap && (
