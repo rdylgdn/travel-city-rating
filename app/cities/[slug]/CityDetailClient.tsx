@@ -13,10 +13,11 @@ type Props = {
   initialBudgetMode: BudgetMode;
   city?: City;
   heroOnly?: boolean;
-  totalRatings?: number; // member reviews + anonymous from DB
+  totalRatings?: number;  // member reviews + anonymous
+  memberReviews?: number; // signed-in reviews only
 };
 
-export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly, totalRatings }: Props) {
+export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly, totalRatings, memberReviews }: Props) {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(initialBudgetMode);
   const [showAuth, setShowAuth] = useState(false);
   const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
@@ -81,7 +82,7 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
           <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <div className="bg-gray-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-400 mb-1">Overall score</p>
             <p className="font-bold text-gray-800">{city.scores.overall.toFixed(1)}/10</p>
@@ -97,6 +98,10 @@ export default function CityDetailClient({ citySlug, initialBudgetMode, city, he
           <div className="bg-gray-50 rounded-xl p-3 text-center">
             <p className="text-xs text-gray-400 mb-1">Ratings</p>
             <p className="font-bold text-gray-800">{totalRatings ?? 0}</p>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-400 mb-1">Reviews</p>
+            <p className="font-bold text-gray-800">{memberReviews ?? 0}</p>
           </div>
         </div>
       </div>
