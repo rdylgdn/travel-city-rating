@@ -129,11 +129,7 @@ export default function CityCard({ city, budgetMode }: Props) {
               </div>
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>{city.bestSeason}</span>
-                <div className="flex items-center gap-2">
-                  {isSaved && <span className="text-rose-400 font-medium">Saved</span>}
-                  {isVisited && <span className="text-green-500 font-medium">Visited</span>}
-                  <span>{city.reviewCount} reviews</span>
-                </div>
+                <span>{city.reviewCount} reviews</span>
               </div>
             </div>
           </div>
