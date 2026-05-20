@@ -106,7 +106,7 @@ export default function DashboardClient({ user, savedCities, visitedCities, revi
       {activeTab === "settings" && <ProfileSettings user={user} />}
 
       {showMap && (
-        <CountriesModal visitedCities={visitedCities} onClose={() => setShowMap(false)} />
+        <CountriesModal visitedCities={visitedCities} savedCities={savedCities} onClose={() => setShowMap(false)} />
       )}
     </div>
   );
