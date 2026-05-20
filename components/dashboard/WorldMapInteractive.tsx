@@ -59,12 +59,17 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
     if (!selected) return;
     setLoadingInfo(true);
     setCountryInfo(null);
-    fetch(`https://restcountries.com/v3.1/numericcode/${selected.isoId}`)
-      .then((r) => r.json())
+    // Zero-pad to 3 digits — RestCountries API requires it (e.g. 8 → 008)
+    const paddedIso = selected.isoId.padStart(3, "0");
+    fetch(`https://restcountries.com/v3.1/numericcode/${paddedIso}`)
+      .then((r) => { if (!r.ok) throw new Error("not found"); return r.json(); })
       .then((data) => {
         const c = data[0];
+        if (!c) throw new Error("empty");
         const langs = Object.values(c.languages ?? {}).slice(0, 2).join(", ");
-        const currObj = Object.values(c.currencies ?? {})[0] as { name: string; symbol?: string };
+        const currObj = Object.values(c.currencies ?? {})[0] as { name: string; symbol?: string } | undefined;
+        // Update selected name with real country name from API
+        setSelected((prev) => prev ? { ...prev, name: c.name?.common ?? prev.name } : prev);
         setCountryInfo({
           flag: c.flag ?? "",
           capital: c.capital?.[0] ?? "—",
@@ -78,8 +83,8 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
 
   const handleCountryClick = useCallback((isoId: string, name: string) => {
     const visited = visitedByIso[isoId] ?? [];
-    const visitedSlugs = new Set(visited.map((c) => c.slug));
-    const saved = (savedByIso[isoId] ?? []).filter((c) => !visitedSlugs.has(c.slug));
+    // Show saved cities independently — a city can appear in both sections if both saved and visited
+    const saved = savedByIso[isoId] ?? [];
     setSelected({ isoId, name, visited, saved });
   }, [visitedByIso, savedByIso]);
 
