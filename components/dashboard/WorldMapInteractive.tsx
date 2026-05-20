@@ -18,6 +18,7 @@ type Props = {
 };
 
 type CountryInfo = {
+  name: string;
   flag: string;
   capital: string;
   languages: string;
@@ -64,17 +65,22 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
     fetch(`https://restcountries.com/v3.1/numericcode/${paddedIso}`)
       .then((r) => { if (!r.ok) throw new Error("not found"); return r.json(); })
       .then((data) => {
-        const c = data[0];
+        const c = Array.isArray(data) ? data[0] : null;
         if (!c) throw new Error("empty");
-        const langs = Object.values(c.languages ?? {}).slice(0, 2).join(", ");
-        const currObj = Object.values(c.currencies ?? {})[0] as { name: string; symbol?: string } | undefined;
-        // Update selected name with real country name from API
-        setSelected((prev) => prev ? { ...prev, name: c.name?.common ?? prev.name } : prev);
+        const langs = c.languages
+          ? (Object.values(c.languages) as string[]).slice(0, 2).join(", ")
+          : "—";
+        const currencies = c.currencies ? Object.values(c.currencies) as { name: string; symbol?: string }[] : [];
+        const currObj = currencies[0];
+        const currency = currObj
+          ? `${currObj.name}${currObj.symbol ? ` (${currObj.symbol})` : ""}`
+          : "—";
         setCountryInfo({
+          name: c.name?.common ?? selected.name,
           flag: c.flag ?? "",
-          capital: c.capital?.[0] ?? "—",
+          capital: Array.isArray(c.capital) && c.capital.length > 0 ? c.capital[0] : "—",
           languages: langs || "—",
-          currency: currObj ? `${currObj.name}${currObj.symbol ? ` (${currObj.symbol})` : ""}` : "—",
+          currency,
         });
       })
       .catch(() => setCountryInfo(null))
@@ -225,7 +231,9 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
         {selected && (
           <div className="w-64 border-l border-gray-100 bg-white flex flex-col shrink-0 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800 text-sm truncate">{selected.name}</h3>
+              <h3 className="font-semibold text-gray-800 text-sm truncate">
+                {countryInfo?.name ?? selected.name}
+              </h3>
               <button onClick={() => setSelected(null)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
@@ -241,8 +249,7 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
               ) : countryInfo ? (
                 <div className="flex items-start gap-3 pb-3 border-b border-gray-100">
                   <span className="text-3xl leading-none mt-0.5">{countryInfo.flag}</span>
-                  <div className="space-y-1 min-w-0">
-                    <p className="text-xs font-semibold text-gray-700">{selected.name}</p>
+                  <div className="space-y-1.5 min-w-0">
                     {[
                       { label: "Capital", value: countryInfo.capital },
                       { label: "Language", value: countryInfo.languages },
@@ -250,7 +257,7 @@ export default function WorldMapInteractive({ visitedCities, savedCities }: Prop
                     ].map(({ label, value }) => (
                       <div key={label} className="flex gap-1.5">
                         <span className="text-xs text-gray-400 shrink-0">{label}:</span>
-                        <span className="text-xs text-gray-600 truncate">{value}</span>
+                        <span className="text-xs text-gray-600">{value}</span>
                       </div>
                     ))}
                   </div>
