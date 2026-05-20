@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, X, Bookmark } from "lucide-react";
+import { Search, SlidersHorizontal, X, Bookmark, CheckCircle2 } from "lucide-react";
 import { City, BudgetMode } from "@/lib/types";
 import CityCard from "./CityCard";
 import BudgetModeSelector from "./BudgetModeSelector";
@@ -9,7 +9,7 @@ import FilterPanel, { Filters } from "./FilterPanel";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
 import { cn } from "@/lib/utils";
 
-type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved";
+type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved" | "visited";
 
 const sortOptions: { value: SortOption; label: string }[] = [
   { value: "score", label: "Top rated" },
@@ -24,15 +24,15 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
   const [sortBy, setSortBy] = useState<SortOption>("score");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<Filters>({ travelStyles: [], regions: [] });
-  const { saved, isLoggedIn } = useSavedCities();
+  const { saved, visited, isLoggedIn } = useSavedCities();
   const showingSaved = sortBy === "saved";
+  const showingVisited = sortBy === "visited";
 
   const filtered = useMemo(() => {
     let result = [...cities];
 
-    if (showingSaved) {
-      result = result.filter((c) => saved.has(c.slug));
-    }
+    if (showingSaved) result = result.filter((c) => saved.has(c.slug));
+    if (showingVisited) result = result.filter((c) => visited.has(c.slug));
 
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -51,7 +51,7 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
       result = result.filter((c) => filters.regions.includes(c.region));
     }
 
-    if (!showingSaved) {
+    if (!showingSaved && !showingVisited) {
       result.sort((a, b) => {
         if (sortBy === "score") return b.scores.overall - a.scores.overall;
         if (sortBy === "budget_asc") return a.dailyBudget[budgetMode] - b.dailyBudget[budgetMode];
@@ -62,7 +62,7 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
     }
 
     return result;
-  }, [cities, query, filters, sortBy, budgetMode, saved, showingSaved]);
+  }, [cities, query, filters, sortBy, budgetMode, saved, visited, showingSaved, showingVisited]);
 
   const activeFilterCount = filters.travelStyles.length + filters.regions.length;
 
@@ -88,28 +88,51 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Saved cities quick filter */}
+            {/* Saved / Visited quick filters */}
             {isLoggedIn && (
-              <button
-                onClick={() => setSortBy(showingSaved ? "score" : "saved")}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
-                  showingSaved
-                    ? "bg-rose-500 text-white border-rose-500"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
-                )}
-              >
-                <Bookmark className={cn("w-4 h-4", showingSaved && "fill-white")} />
-                Saved
-                {saved.size > 0 && (
-                  <span className={cn(
-                    "rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
-                    showingSaved ? "bg-white text-rose-500" : "bg-rose-100 text-rose-500"
-                  )}>
-                    {saved.size}
-                  </span>
-                )}
-              </button>
+              <>
+                <button
+                  onClick={() => setSortBy(showingSaved ? "score" : "saved")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
+                    showingSaved
+                      ? "bg-rose-500 text-white border-rose-500"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
+                  )}
+                >
+                  <Bookmark className={cn("w-4 h-4", showingSaved && "fill-white")} />
+                  Saved
+                  {saved.size > 0 && (
+                    <span className={cn(
+                      "rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
+                      showingSaved ? "bg-white text-rose-500" : "bg-rose-100 text-rose-500"
+                    )}>
+                      {saved.size}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setSortBy(showingVisited ? "score" : "visited")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
+                    showingVisited
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-green-300"
+                  )}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Visited
+                  {visited.size > 0 && (
+                    <span className={cn(
+                      "rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
+                      showingVisited ? "bg-white text-green-500" : "bg-green-100 text-green-600"
+                    )}>
+                      {visited.size}
+                    </span>
+                  )}
+                </button>
+              </>
             )}
 
             <button
@@ -130,7 +153,7 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
               )}
             </button>
 
-            {!showingSaved && (
+            {!showingSaved && !showingVisited && (
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
@@ -167,10 +190,14 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
             {showingSaved ? (
               <>
                 <p className="text-gray-400 text-lg">No saved cities yet.</p>
-                <button
-                  onClick={() => setSortBy("score")}
-                  className="mt-3 text-rose-500 text-sm font-medium hover:underline"
-                >
+                <button onClick={() => setSortBy("score")} className="mt-3 text-rose-500 text-sm font-medium hover:underline">
+                  Browse all cities
+                </button>
+              </>
+            ) : showingVisited ? (
+              <>
+                <p className="text-gray-400 text-lg">No visited cities yet.</p>
+                <button onClick={() => setSortBy("score")} className="mt-3 text-green-500 text-sm font-medium hover:underline">
                   Browse all cities
                 </button>
               </>
@@ -189,7 +216,7 @@ export default function ExploreClient({ cities }: { cities: City[] }) {
         ) : (
           <>
             <p className="text-sm text-gray-400 mb-4">
-              {showingSaved ? `${filtered.length} saved cities` : `${filtered.length} cities`}
+              {showingSaved ? `${filtered.length} saved` : showingVisited ? `${filtered.length} visited` : `${filtered.length} cities`}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((city) => (

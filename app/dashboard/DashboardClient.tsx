@@ -1,32 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Star, Settings, Sliders, MapPin } from "lucide-react";
+import { Bookmark, Star, Settings, Sliders, MapPin, CheckCircle2 } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
-import { UserProfile, CityStats } from "@/lib/mock-user";
+import { UserProfile } from "@/lib/mock-user";
 import SavedCities from "@/components/dashboard/SavedCities";
+import VisitedCities from "@/components/dashboard/VisitedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
 import TravelPreferences from "@/components/dashboard/TravelPreferences";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import { cn } from "@/lib/utils";
 
-type Tab = "saved" | "reviews" | "preferences" | "settings";
+type Tab = "saved" | "visited" | "reviews" | "preferences" | "settings";
 
 const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "saved", label: "Saved cities", icon: Bookmark },
+  { id: "saved", label: "Saved", icon: Bookmark },
+  { id: "visited", label: "Visited", icon: CheckCircle2 },
   { id: "reviews", label: "My reviews", icon: Star },
-  { id: "preferences", label: "Travel preferences", icon: Sliders },
+  { id: "preferences", label: "Preferences", icon: Sliders },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
 type Props = {
   user: UserProfile;
   savedCities: { city: City; budgetMode: BudgetMode }[];
+  visitedCities: City[];
   reviews: Review[];
-  stats: CityStats;
+  stats: { savedCount: number; reviewCount: number; visitedCount: number };
 };
 
-export default function DashboardClient({ user, savedCities, reviews, stats  }: Props) {
+export default function DashboardClient({ user, savedCities, visitedCities, reviews, stats }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("saved");
 
   return (
@@ -45,15 +48,15 @@ export default function DashboardClient({ user, savedCities, reviews, stats  }: 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
-          { label: "Saved cities", value: stats.savedCount, icon: Bookmark },
-          { label: "Reviews written", value: stats.reviewCount, icon: Star },
-          { label: "Cities visited", value: stats.visitedCount, icon: MapPin },
-        ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
-            <Icon className="w-4 h-4 text-rose-400 mx-auto mb-1" />
+          { label: "Saved", value: stats.savedCount, icon: Bookmark, color: "text-rose-400", onClick: () => setActiveTab("saved") },
+          { label: "Visited", value: stats.visitedCount, icon: CheckCircle2, color: "text-green-500", onClick: () => setActiveTab("visited") },
+          { label: "Reviews", value: stats.reviewCount, icon: Star, color: "text-yellow-500", onClick: () => setActiveTab("reviews") },
+        ].map(({ label, value, icon: Icon, color, onClick }) => (
+          <button key={label} onClick={onClick} className="bg-gray-50 rounded-xl p-4 text-center hover:bg-gray-100 transition-colors">
+            <Icon className={`w-4 h-4 ${color} mx-auto mb-1`} />
             <p className="text-2xl font-bold text-gray-800">{value}</p>
             <p className="text-xs text-gray-400">{label}</p>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -67,7 +70,9 @@ export default function DashboardClient({ user, savedCities, reviews, stats  }: 
               className={cn(
                 "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors",
                 activeTab === id
-                  ? "border-rose-500 text-rose-600"
+                  ? id === "visited"
+                    ? "border-green-500 text-green-600"
+                    : "border-rose-500 text-rose-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               )}
             >
@@ -80,6 +85,7 @@ export default function DashboardClient({ user, savedCities, reviews, stats  }: 
 
       {/* Tab content */}
       {activeTab === "saved" && <SavedCities cities={savedCities} />}
+      {activeTab === "visited" && <VisitedCities cities={visitedCities} />}
       {activeTab === "reviews" && <MyReviews reviews={reviews} />}
       {activeTab === "preferences" && <TravelPreferences user={user} />}
       {activeTab === "settings" && <ProfileSettings user={user} />}

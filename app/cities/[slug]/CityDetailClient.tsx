@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Bookmark, CheckCircle2 } from "lucide-react";
 import { BudgetMode, City } from "@/lib/types";
-import { budgetLabel } from "@/lib/utils";
-import SaveButton from "@/components/SaveButton";
+import { budgetLabel, cn } from "@/lib/utils";
 import AuthModal from "@/components/AuthModal";
 import BudgetModeSelector from "@/components/BudgetModeSelector";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
@@ -18,20 +18,51 @@ type Props = {
 export default function CityDetailClient({ citySlug, initialBudgetMode, city, heroOnly }: Props) {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>(initialBudgetMode);
   const [showAuth, setShowAuth] = useState(false);
-  const { saved, toggle, loading } = useSavedCities();
+  const { saved, visited, toggleSaved, toggleVisited, loading } = useSavedCities();
   const isSaved = saved.has(citySlug);
+  const isVisited = visited.has(citySlug);
 
   async function handleSave(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const result = await toggle(citySlug, budgetMode);
+    const result = await toggleSaved(citySlug, budgetMode);
+    if (result === "unauthenticated") setShowAuth(true);
+  }
+
+  async function handleVisited(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = await toggleVisited(citySlug);
     if (result === "unauthenticated") setShowAuth(true);
   }
 
   if (heroOnly) {
     return (
       <>
-        <SaveButton isSaved={isSaved} loading={loading} onToggle={handleSave} />
+        {!loading && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className={cn(
+                "flex flex-col items-center gap-1 w-12 h-12 rounded-xl justify-center transition-all shadow-sm",
+                isSaved ? "bg-rose-500 text-white" : "bg-white/90 text-gray-500 hover:bg-white hover:text-rose-500"
+              )}
+            >
+              <Bookmark className={cn("w-4 h-4", isSaved && "fill-white")} />
+              <span className="text-[9px] font-semibold">Save</span>
+            </button>
+            <button
+              onClick={handleVisited}
+              className={cn(
+                "flex flex-col items-center gap-1 w-12 h-12 rounded-xl justify-center transition-all shadow-sm",
+                isVisited ? "bg-green-500 text-white" : "bg-white/90 text-gray-500 hover:bg-white hover:text-green-500"
+              )}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="text-[9px] font-semibold">Visited</span>
+            </button>
+          </div>
+        )}
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </>
     );
