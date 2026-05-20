@@ -9,13 +9,15 @@ import FilterPanel, { Filters } from "./FilterPanel";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
 import { cn } from "@/lib/utils";
 
-type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved" | "visited";
+type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved" | "visited" | "top_saved" | "top_visited";
 
 const sortOptions: { value: SortOption; label: string }[] = [
-  { value: "score", label: "Top rated" },
-  { value: "budget_asc", label: "Budget: low to high" },
-  { value: "budget_desc", label: "Budget: high to low" },
-  { value: "reviews", label: "Most reviewed" },
+  { value: "score",        label: "Top rated" },
+  { value: "top_saved",    label: "Most saved" },
+  { value: "top_visited",  label: "Most visited" },
+  { value: "budget_asc",   label: "Budget: low to high" },
+  { value: "budget_desc",  label: "Budget: high to low" },
+  { value: "reviews",      label: "Most reviewed" },
 ];
 
 type ExploreProps = {
@@ -61,10 +63,12 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
 
     if (!showingSaved && !showingVisited) {
       result.sort((a, b) => {
-        if (sortBy === "score") return b.scores.overall - a.scores.overall;
-        if (sortBy === "budget_asc") return a.dailyBudget[budgetMode] - b.dailyBudget[budgetMode];
-        if (sortBy === "budget_desc") return b.dailyBudget[budgetMode] - a.dailyBudget[budgetMode];
-        if (sortBy === "reviews") return b.reviewCount - a.reviewCount;
+        if (sortBy === "score")        return b.scores.overall - a.scores.overall;
+        if (sortBy === "budget_asc")   return a.dailyBudget[budgetMode] - b.dailyBudget[budgetMode];
+        if (sortBy === "budget_desc")  return b.dailyBudget[budgetMode] - a.dailyBudget[budgetMode];
+        if (sortBy === "reviews")      return b.reviewCount - a.reviewCount;
+        if (sortBy === "top_saved")    return (savedCounts[b.slug] ?? 0) - (savedCounts[a.slug] ?? 0);
+        if (sortBy === "top_visited")  return (visitedCounts[b.slug] ?? 0) - (visitedCounts[a.slug] ?? 0);
         return 0;
       });
     }
