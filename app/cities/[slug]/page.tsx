@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { MapPin, Star, Users, Calendar } from "lucide-react";
-import { cities } from "@/lib/seed-data";
+import { cities, cities as allCities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import { blendScores } from "@/lib/scores";
 import { getPlatformSettings } from "@/lib/platform-settings";
@@ -19,7 +19,6 @@ import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
 import { BudgetMode } from "@/lib/types";
 import { getTravelerBadge } from "@/lib/profile";
-import { cities as allCities } from "@/lib/seed-data";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -31,8 +30,7 @@ export async function generateStaticParams() {
 }
 
 async function getAllCities() {
-  const { createClient: serverClient } = await import("@/utils/supabase/server");
-  const supabase = await serverClient();
+  const supabase = await createClient();
   const [{ data: adminRows }, { data: archivedRows }] = await Promise.all([
     supabase.from("admin_cities").select("*").eq("is_published", true),
     supabase.from("archived_slugs").select("slug"),
