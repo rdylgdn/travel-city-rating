@@ -131,11 +131,14 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
     for (const file of imageFiles) {
       const ext = file.name.split(".").pop() ?? "jpg";
       const path = `${userId}/${citySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("review-images").upload(path, file, { upsert: false });
-      if (!uploadErr) {
-        const { data: urlData } = supabase.storage.from("review-images").getPublicUrl(path);
-        uploadedUrls.push(urlData.publicUrl);
+      const { error: uploadErr } = await supabase.storage.from("review-images").upload(path, file);
+      if (uploadErr) {
+        setError(`Image upload failed: ${uploadErr.message}`);
+        setLoading(false);
+        return;
       }
+      const { data: urlData } = supabase.storage.from("review-images").getPublicUrl(path);
+      uploadedUrls.push(urlData.publicUrl);
     }
 
     const { error: err } = await supabase.from("reviews").upsert({
