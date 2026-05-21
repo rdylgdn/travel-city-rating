@@ -31,6 +31,7 @@ export type AdminCityRow = {
   breakdown_activities: number;
   breakdown_extras: number;
   best_season: string;
+  monthly_data?: Record<string, unknown> | null;
   is_published: boolean;
 };
 
@@ -73,6 +74,7 @@ export function adminCityToCity(row: AdminCityRow): City {
       extras:        row.breakdown_extras ?? 5,
     },
     bestSeason: row.best_season ?? "",
+    monthlyData: row.monthly_data as Record<string, import("./types").MonthData> | undefined,
     reviewCount: 0,
     anonymousRatingCount: 0,
   };

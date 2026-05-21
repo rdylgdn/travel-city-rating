@@ -143,6 +143,7 @@ export default function CityFormModal({ existing, isSeedEdit, onClose, onSaved }
       breakdown_accommodation: bAccommodation, breakdown_food: bFood,
       breakdown_transport: bTransport, breakdown_activities: bActivities, breakdown_extras: bExtras,
       is_published: true,
+      monthly_data: monthlyData,
       updated_at: new Date().toISOString(),
     };
 
