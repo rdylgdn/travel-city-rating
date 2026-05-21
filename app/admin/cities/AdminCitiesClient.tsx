@@ -125,6 +125,7 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">City</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Score</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Budget/day</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Region</th>
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Status</th>
                   <th className="px-4 py-2.5" />
                 </tr>
@@ -140,6 +141,7 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
                       <span className={`font-semibold ${scoreColor(row.score_overall)}`}>{row.score_overall?.toFixed(1)}</span>
                     </td>
                     <td className="px-4 py-2.5 text-gray-600">${row.budget_budget}</td>
+                    <td className="px-4 py-2.5 text-gray-400 text-xs">{row.region}</td>
                     <td className="px-4 py-2.5">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${row.is_published ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>
                         {row.is_published ? "Published" : "Draft"}
