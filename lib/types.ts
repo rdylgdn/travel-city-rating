@@ -82,6 +82,7 @@ export type Review = {
   cons: string[];
   createdAt: string;
   updatedAt?: string;
+  imageUrls?: string[];
 };
 
 export type AnonymousRating = {

@@ -43,6 +43,7 @@ export default function ReviewWithActions({ review, profile, citySlug, userId, u
       writtenReview: review.writtenReview,
       pros: review.pros,
       cons: review.cons,
+      imageUrls: review.imageUrls ?? [],
       categoryScores: review.rawData ? {
         score_cost_value: review.rawData.score_cost_value as number,
         score_safety: review.rawData.score_safety as number,

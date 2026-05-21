@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2, CheckCircle2, ChevronDown } from "lucide-react";
+import { Plus, X, Loader2, CheckCircle2, ChevronDown, ImagePlus } from "lucide-react";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { TravelStyle } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ export type ExistingReview = {
   writtenReview?: string | null;
   pros?: string[];
   cons?: string[];
+  imageUrls?: string[];
 };
 
 type Props = {
@@ -79,9 +81,35 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
   const [writtenReview, setWrittenReview] = useState(existingReview?.writtenReview ?? "");
   const [pros, setPros] = useState<string[]>(existingReview?.pros?.length ? existingReview.pros : [""]);
   const [cons, setCons] = useState<string[]>(existingReview?.cons?.length ? existingReview.cons : [""]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(existingReview?.imageUrls ?? []);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>(existingReview?.imageUrls ?? []);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = 4 - imagePreviews.length;
+    const selected = files.slice(0, remaining);
+    setImageFiles((prev) => [...prev, ...selected]);
+    selected.forEach((f) => {
+      const url = URL.createObjectURL(f);
+      setImagePreviews((prev) => [...prev, url]);
+    });
+    e.target.value = "";
+  }
+
+  function removeImage(i: number) {
+    const isExisting = i < existingImageUrls.length;
+    if (isExisting) {
+      setExistingImageUrls((prev) => prev.filter((_, j) => j !== i));
+    } else {
+      const fileIdx = i - existingImageUrls.length;
+      setImageFiles((prev) => prev.filter((_, j) => j !== fileIdx));
+    }
+    setImagePreviews((prev) => prev.filter((_, j) => j !== i));
+  }
 
   function updatePro(i: number, val: string) { setPros((p) => p.map((x, j) => j === i ? val : x)); }
   function updateCon(i: number, val: string) { setCons((c) => c.map((x, j) => j === i ? val : x)); }
@@ -98,6 +126,18 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
     const cleanCons = cons.filter((c) => c.trim());
     const monthVisited = month && year ? `${month} ${year}` : null;
 
+    // Upload new images to Supabase Storage
+    const uploadedUrls: string[] = [...existingImageUrls];
+    for (const file of imageFiles) {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${userId}/${citySlug}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("review-images").upload(path, file, { upsert: false });
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage.from("review-images").getPublicUrl(path);
+        uploadedUrls.push(urlData.publicUrl);
+      }
+    }
+
     const { error: err } = await supabase.from("reviews").upsert({
       city_slug: citySlug,
       user_id: userId,
@@ -110,6 +150,7 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
       written_review: writtenReview || null,
       pros: cleanPros.length ? cleanPros : null,
       cons: cleanCons.length ? cleanCons : null,
+      image_urls: uploadedUrls.length ? uploadedUrls : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,city_slug" });
 
@@ -295,6 +336,31 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
               </button>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Photo upload */}
+      <div>
+        <label className="text-sm font-semibold text-gray-700 block mb-2">
+          Add photos <span className="text-gray-400 font-normal">(up to 4)</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {imagePreviews.map((src, i) => (
+            <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group">
+              <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" sizes="80px" />
+              <button type="button" onClick={() => removeImage(i)}
+                className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <X className="w-3 h-3 text-white" />
+              </button>
+            </div>
+          ))}
+          {imagePreviews.length < 4 && (
+            <label className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-rose-300 hover:bg-rose-50 transition-all">
+              <ImagePlus className="w-5 h-5 text-gray-400" />
+              <span className="text-[10px] text-gray-400 mt-1">Add photo</span>
+              <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
+            </label>
+          )}
         </div>
       </div>
 

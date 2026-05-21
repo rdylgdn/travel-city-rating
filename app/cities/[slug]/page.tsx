@@ -7,6 +7,7 @@ import { blendScores } from "@/lib/scores";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import ReviewWithActions from "@/components/ReviewWithActions";
+import ReviewGallery, { GalleryImage } from "@/components/ReviewGallery";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewsGate from "@/components/ReviewsGate";
 import ReviewForm from "@/components/ReviewForm";
@@ -103,6 +104,18 @@ export default async function CityPage({ params, searchParams }: Props) {
       badge: getTravelerBadge(visitedCountPerUser[r.user_id] ?? 0),
     };
   }
+
+  // Build gallery from all reviews with images
+  const galleryImages: GalleryImage[] = reviews.flatMap((r) => {
+    const urls: string[] = r.image_urls ?? [];
+    const profile = reviewProfiles[r.id];
+    return urls.map((url) => ({
+      url,
+      authorName: profile?.displayName ?? r.user_email?.split("@")[0] ?? "Traveler",
+      travelStyle: r.travel_style ?? undefined,
+      monthVisited: r.month_visited ?? undefined,
+    }));
+  });
 
   const scoreLabels: [keyof typeof city.scores, string][] = [
     ["overall", "Overall"],
@@ -248,6 +261,9 @@ export default async function CityPage({ params, searchParams }: Props) {
         {/* Anonymous rating — guests only */}
         {!user && <AnonymousRatingWidget citySlug={city.slug} />}
 
+        {/* Photo gallery */}
+        {galleryImages.length > 0 && <ReviewGallery images={galleryImages} />}
+
         {/* Reviews section */}
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-4">
@@ -288,6 +304,7 @@ export default async function CityPage({ params, searchParams }: Props) {
                       cons: r.cons ?? [],
                       createdAt: r.created_at ?? "",
                       updatedAt: r.updated_at ?? "",
+                      imageUrls: r.image_urls ?? [],
                     };
                     return isOwn ? (
                       <ReviewWithActions

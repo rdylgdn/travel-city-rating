@@ -24,9 +24,10 @@ type Props = {
   isOwn?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  onImageClick?: (index: number) => void;
 };
 
-export default function ReviewCard({ review, profile, isOwn, onEdit, onDelete }: Props) {
+export default function ReviewCard({ review, profile, isOwn, onEdit, onDelete, onImageClick }: Props) {
   const initials = (profile?.displayName ?? review.authorName).slice(0, 2).toUpperCase();
   const wasEdited = review.updatedAt && review.createdAt &&
     new Date(review.updatedAt).getTime() - new Date(review.createdAt).getTime() > 5000;
@@ -128,6 +129,17 @@ export default function ReviewCard({ review, profile, isOwn, onEdit, onDelete }:
               </ul>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Review images */}
+      {review.imageUrls && review.imageUrls.length > 0 && (
+        <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-gray-50">
+          {review.imageUrls.map((url, i) => (
+            <button key={i} onClick={() => onImageClick?.(i)} className="relative w-16 h-16 rounded-xl overflow-hidden group border border-gray-100">
+              <Image src={url} alt="Review photo" fill className="object-cover group-hover:scale-105 transition-transform duration-200" sizes="64px" />
+            </button>
+          ))}
         </div>
       )}
 
