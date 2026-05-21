@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, X, Bookmark, CheckCircle2 } from "lucide-react";
+import { Search, SlidersHorizontal, X, Bookmark, CheckCircle2, BarChart2 } from "lucide-react";
 import { City, BudgetMode } from "@/lib/types";
 import CityCard from "./CityCard";
 import BudgetModeSelector from "./BudgetModeSelector";
 import FilterPanel, { Filters } from "./FilterPanel";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
 import { cn } from "@/lib/utils";
+import CompareModal from "./CompareModal";
 
 type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved" | "visited" | "top_saved" | "top_visited";
 
@@ -33,10 +34,36 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
   const [showFilters, setShowFilters] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSlugs, setCompareSlugs] = useState<string[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [filters, setFilters] = useState<Filters>({ travelStyles: [], regions: [] });
   const { saved, visited, isLoggedIn } = useSavedCities();
   const showingSaved = sortBy === "saved";
   const showingVisited = sortBy === "visited";
+  const MAX_COMPARE = isLoggedIn ? 4 : 2;
+
+  function toggleCompareCity(slug: string) {
+    setCompareSlugs((prev) => {
+      if (prev.includes(slug)) return prev.filter((s) => s !== slug);
+      if (prev.length >= MAX_COMPARE) return prev;
+      return [...prev, slug];
+    });
+  }
+
+  function openCompare() {
+    if (compareSlugs.length >= 2) setShowCompareModal(true);
+  }
+
+  function exitCompareMode() {
+    setCompareMode(false);
+    setCompareSlugs([]);
+    setShowCompareModal(false);
+  }
+
+  const compareCities = compareSlugs
+    .map((slug) => cities.find((c) => c.slug === slug))
+    .filter(Boolean) as City[];
 
   const filtered = useMemo(() => {
     let result = [...cities];
@@ -147,6 +174,42 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
               </>
             )}
 
+            {/* Compare button */}
+            {compareMode ? (
+              <>
+                <button
+                  onClick={compareSlugs.length >= 2 ? openCompare : undefined}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
+                    compareSlugs.length >= 2
+                      ? "bg-rose-500 text-white border-rose-500 hover:bg-rose-600"
+                      : "bg-rose-50 text-rose-400 border-rose-200 cursor-default"
+                  )}
+                >
+                  <BarChart2 className="w-4 h-4" />
+                  Compare
+                  {compareSlugs.length > 0 && (
+                    <span className={cn("rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
+                      compareSlugs.length >= 2 ? "bg-white text-rose-500" : "bg-rose-200 text-rose-500"
+                    )}>
+                      {compareSlugs.length}
+                    </span>
+                  )}
+                </button>
+                <button onClick={exitCompareMode} className="flex items-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:border-gray-300 transition-all">
+                  <X className="w-3.5 h-3.5" /> Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setCompareMode(true)}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-rose-300 hover:text-rose-500 transition-all bg-white"
+              >
+                <BarChart2 className="w-4 h-4" />
+                Compare
+              </button>
+            )}
+
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
@@ -185,6 +248,20 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
           <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
         </div>
       </div>
+
+      {/* Compare mode banner */}
+      {compareMode && (
+        <div className="bg-rose-50 border-b border-rose-100 px-4 py-2.5">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <p className="text-sm text-rose-600 font-medium">
+              <BarChart2 className="w-4 h-4 inline mr-1.5" />
+              Compare mode — click any city card to add it.
+              {!isLoggedIn && " (2 cities max — sign in for more)"}
+            </p>
+            <span className="text-xs text-rose-400">{compareSlugs.length}/{MAX_COMPARE} selected</span>
+          </div>
+        </div>
+      )}
 
       {/* Filter panel */}
       {showFilters && (
@@ -240,12 +317,23 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   liveAnonCount={anonCounts[city.slug]}
                   savedCount={savedCounts[city.slug] ?? 0}
                   visitedCount={visitedCounts[city.slug] ?? 0}
+                  compareMode={compareMode}
+                  isCompared={compareSlugs.includes(city.slug)}
+                  onCompareToggle={() => toggleCompareCity(city.slug)}
                 />
               ))}
             </div>
           </>
         )}
       </div>
+
+      {showCompareModal && compareCities.length >= 2 && (
+        <CompareModal
+          cities={compareCities}
+          isLoggedIn={isLoggedIn}
+          onClose={() => setShowCompareModal(false)}
+        />
+      )}
     </div>
   );
 }

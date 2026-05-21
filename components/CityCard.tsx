@@ -17,9 +17,12 @@ type Props = {
   liveAnonCount?: number;
   savedCount?: number;
   visitedCount?: number;
+  compareMode?: boolean;
+  isCompared?: boolean;
+  onCompareToggle?: () => void;
 };
 
-export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount, savedCount = 0, visitedCount = 0 }: Props) {
+export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount, savedCount = 0, visitedCount = 0, compareMode, isCompared, onCompareToggle }: Props) {
   const dailyBudget = city.dailyBudget[budgetMode];
   const reviewCount = liveReviewCount ?? city.reviewCount;
   const totalCount = reviewCount + (liveAnonCount ?? 0);
@@ -45,9 +48,21 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
 
   return (
     <>
-      <div className="relative group">
-        <Link href={`/cities/${city.slug}?budget=${budgetMode}`} className="block">
-          <div className="rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+      <div className={cn("relative group", compareMode && "cursor-pointer")}
+        onClick={compareMode ? onCompareToggle : undefined}>
+        <Link
+          href={compareMode ? "#" : `/cities/${city.slug}?budget=${budgetMode}`}
+          className="block"
+          onClick={compareMode ? (e) => e.preventDefault() : undefined}
+        >
+          <div className={cn(
+            "rounded-2xl overflow-hidden bg-white shadow-sm border transition-all duration-200",
+            compareMode
+              ? isCompared
+                ? "border-rose-500 shadow-md ring-2 ring-rose-400"
+                : "border-gray-100 hover:border-rose-300 hover:shadow-md"
+              : "border-gray-100 hover:shadow-md"
+          )}>
             <div className="relative h-52 w-full overflow-hidden">
               <Image
                 src={city.imageUrl}
@@ -57,6 +72,20 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
 
+              {/* Compare mode overlay */}
+              {compareMode && (
+                <div className={cn(
+                  "absolute inset-0 z-10 flex items-center justify-center transition-all",
+                  isCompared ? "bg-rose-500/20" : "bg-transparent"
+                )}>
+                  {isCompared && (
+                    <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center shadow-lg">
+                      <CheckCircle2 className="w-6 h-6 text-white fill-white stroke-rose-500" />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Score badge */}
               <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1 z-10">
                 <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
@@ -65,8 +94,8 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                 </span>
               </div>
 
-              {/* Action panel — always visible on mobile, slides in on desktop hover */}
-              {!loading && (
+              {/* Action panel — hidden in compare mode */}
+              {!loading && !compareMode && (
                 <div className={cn(
                   "absolute top-0 right-0 h-full flex items-center z-10",
                   "translate-x-0 sm:translate-x-full sm:group-hover:translate-x-0",
