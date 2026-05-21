@@ -1,6 +1,8 @@
 import { cities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import ExploreClient from "@/components/ExploreClient";
+import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
+import { TravelStyle } from "@/lib/types";
 
 function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): Record<string, number> {
   const map: Record<string, number> = Object.fromEntries(slugs.map((s) => [s, 0]));
@@ -14,13 +16,22 @@ export default async function HomePage() {
   const supabase = await createClient();
   const slugs = cities.map((c) => c.slug);
 
-  const [{ data: reviewRows }, { data: anonRows }, { data: savedRows }, { data: visitedRows }] =
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const [{ data: reviewRows }, { data: anonRows }, { data: savedRows }, { data: visitedRows }, profileRes] =
     await Promise.all([
       supabase.from("reviews").select("city_slug"),
       supabase.from("anonymous_ratings").select("city_slug"),
       supabase.from("saved_cities").select("city_slug"),
       supabase.from("visited_cities").select("city_slug"),
+      user ? supabase.from("profiles").select("travel_styles, currency").eq("id", user.id).single() : Promise.resolve({ data: null }),
     ]);
+
+  const profile = profileRes?.data ?? null;
+  const preferredStyles = (profile?.travel_styles ?? []) as TravelStyle[];
+  const savedSlugs = (savedRows ?? []).map((r) => r.city_slug);
+  const visitedSlugsForRec = (visitedRows ?? []).map((r) => r.city_slug);
+  const excludeForRec = [...new Set([...savedSlugs, ...visitedSlugsForRec])];
 
   return (
     <div>
@@ -32,6 +43,16 @@ export default async function HomePage() {
           Real traveler ratings · Budget-aware · No booking required
         </p>
       </div>
+
+      {preferredStyles.length > 0 && (
+        <PersonalizedRecommendations
+          allCities={cities}
+          preferredStyles={preferredStyles}
+          excludeSlugs={excludeForRec}
+          budgetMode={(profile?.currency ? "budget" : "budget") as "budget"}
+        />
+      )}
+
       <ExploreClient
         cities={cities}
         reviewCounts={buildCountMap(reviewRows, slugs)}

@@ -1,4 +1,5 @@
 import { City, Review } from "./types";
+import { MONTHLY_DATA } from "./monthly-data";
 
 export const cities: City[] = [
   {
@@ -30,6 +31,7 @@ export const cities: City[] = [
     reviewCount: 124,
     anonymousRatingCount: 342,
     commonComplaints: ["Heat and humidity year-round", "Traffic congestion", "Tourist scams near major temples", "Pollution in busy areas"],
+    monthlyData: MONTHLY_DATA.bangkok,
   },
   {
     id: "2",
@@ -60,6 +62,7 @@ export const cities: City[] = [
     reviewCount: 218,
     anonymousRatingCount: 589,
     commonComplaints: ["Expensive accommodation", "Language barrier outside tourist areas", "Small accommodation sizes", "Crowded during holidays"],
+    monthlyData: MONTHLY_DATA.tokyo,
   },
   {
     id: "3",
@@ -90,6 +93,7 @@ export const cities: City[] = [
     reviewCount: 96,
     anonymousRatingCount: 278,
     commonComplaints: ["Overcrowded in peak summer", "Hilly terrain is tiring", "Rising prices due to tourism", "Limited late-night public transport"],
+    monthlyData: MONTHLY_DATA.lisbon,
   },
   {
     id: "4",
@@ -120,6 +124,7 @@ export const cities: City[] = [
     reviewCount: 183,
     anonymousRatingCount: 461,
     commonComplaints: ["Traffic in southern Bali", "Overtourism in popular spots", "Requires transport to get around", "Monsoon season can disrupt plans"],
+    monthlyData: MONTHLY_DATA.bali,
   },
   {
     id: "5",
@@ -150,6 +155,7 @@ export const cities: City[] = [
     reviewCount: 142,
     anonymousRatingCount: 402,
     commonComplaints: ["Pickpockets on Las Ramblas", "Expensive compared to other Spanish cities", "Overcrowded tourist sites", "Noise at night in central areas"],
+    monthlyData: MONTHLY_DATA.barcelona,
   },
   {
     id: "6",
@@ -180,6 +186,7 @@ export const cities: City[] = [
     reviewCount: 87,
     anonymousRatingCount: 231,
     commonComplaints: ["Air quality on bad days", "Safety concerns in some neighborhoods", "Altitude sickness for new arrivals", "Traffic and sprawl"],
+    monthlyData: MONTHLY_DATA["mexico-city"],
   },
   {
     id: "7",
@@ -210,6 +217,7 @@ export const cities: City[] = [
     reviewCount: 74,
     anonymousRatingCount: 198,
     commonComplaints: ["Safety concerns in some areas", "Requires a car to explore properly", "Load shedding power outages", "Inequality is visible and confronting"],
+    monthlyData: MONTHLY_DATA["cape-town"],
   },
   {
     id: "8",
@@ -240,6 +248,7 @@ export const cities: City[] = [
     reviewCount: 195,
     anonymousRatingCount: 512,
     commonComplaints: ["Very expensive", "Subway reliability", "Noise and crowding", "Extreme summer heat and winter cold"],
+    monthlyData: MONTHLY_DATA["new-york"],
   },
 ];
 

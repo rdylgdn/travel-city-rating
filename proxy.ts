@@ -31,8 +31,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Redirect unauthenticated users away from /dashboard
-  if (!user && pathname.startsWith("/dashboard")) {
+  // Redirect unauthenticated users away from protected pages
+  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/trips"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.searchParams.set("auth", "signin");

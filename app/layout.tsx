@@ -32,6 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/suggest" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
                     Suggest a city
                   </Link>
+                  <Link href="/trips" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
+                    Trip planner
+                  </Link>
                   <CurrencySelector />
                   <Suspense fallback={
                     <div className="w-20 h-8 bg-gray-100 rounded-full animate-pulse" />

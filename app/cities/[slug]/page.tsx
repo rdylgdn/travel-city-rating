@@ -8,6 +8,7 @@ import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import ReviewWithActions from "@/components/ReviewWithActions";
 import ReviewGallery, { GalleryImage } from "@/components/ReviewGallery";
+import BestTimeChart from "@/components/BestTimeChart";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewsGate from "@/components/ReviewsGate";
 import ReviewForm from "@/components/ReviewForm";
@@ -245,6 +246,9 @@ export default async function CityPage({ params, searchParams }: Props) {
           <h2 className="text-lg font-bold text-gray-800 mb-2">Why visit?</h2>
           <p className="text-gray-600 leading-relaxed">{city.whyVisit}</p>
         </div>
+
+        {/* Best time to visit */}
+        {city.monthlyData && <BestTimeChart monthlyData={city.monthlyData} />}
 
         {/* Common complaints */}
         <div>

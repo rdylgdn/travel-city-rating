@@ -27,14 +27,22 @@ export type Region =
   | "South America"
   | "Oceania";
 
+export type MonthData = {
+  weather: number;           // 1–10
+  crowds: "Low" | "Medium" | "High";
+  costLevel: "Cheaper" | "Normal" | "Pricier";
+  note?: string;
+};
+
 export type City = {
   id: string;
   slug: string;
   name: string;
   country: string;
-  countryIso: string; // ISO 3166-1 numeric code, matches world-atlas TopoJSON IDs
+  countryIso: string;
   region: Region;
   imageUrl: string;
+  monthlyData?: Record<string, MonthData>;
   summary: string;
   whyVisit: string;
   bestAreas: string[];
