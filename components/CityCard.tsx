@@ -150,24 +150,30 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
               </div>
             </div>
 
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-2">
+            {/* Fixed-height card body — all rows always occupy space */}
+            <div className="p-3 h-[116px] flex flex-col justify-between overflow-hidden">
+              {/* Budget */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-semibold text-gray-800">{format(dailyBudget)}/day</span>
                 </div>
                 <span className="text-xs text-gray-400">{budgetLabel(budgetMode)}</span>
               </div>
-              <div className="flex flex-wrap gap-1 mb-2">
+
+              {/* Tags — no wrap, overflow hidden */}
+              <div className="flex gap-1 overflow-hidden">
                 {city.bestFor.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-xs px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-medium">
+                  <span key={tag} className="text-xs px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-medium whitespace-nowrap shrink-0">
                     {tag}
                   </span>
                 ))}
               </div>
+
+              {/* Season + reviews */}
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>{city.bestSeason}</span>
-                <div className="flex items-center gap-2">
+                <span className="truncate max-w-[80px]">{city.bestSeason}</span>
+                <div className="flex items-center gap-2 shrink-0">
                   <Link
                     href={`/compare?cities=${city.slug}`}
                     onClick={(e) => e.stopPropagation()}
@@ -179,29 +185,30 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                   <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
                 </div>
               </div>
-              {/* Social proof — always rendered, invisible when empty to keep card height uniform */}
+
+              {/* Social proof — always rendered, invisible when empty */}
               <div className={cn(
-                "flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50 flex-wrap",
+                "flex items-center gap-3 pt-1.5 border-t border-gray-50",
                 (networkVisitedCount > 0 || savedCount > 0 || visitedCount > 0) ? "visible" : "invisible"
               )}>
                 {networkVisitedCount > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+                  <span className="flex items-center gap-1 text-xs text-rose-500 font-medium whitespace-nowrap">
                     <Users className="w-3 h-3 text-rose-400" />
                     {networkVisitedCount} {networkVisitedCount === 1 ? "friend" : "friends"} visited
                   </span>
                 )}
                 {savedCount > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-rose-400">
-                      <Bookmark className="w-3 h-3 fill-rose-400" />
-                      {savedCount} saved
-                    </span>
-                  )}
-                  {visitedCount > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-green-500">
-                      <CheckCircle2 className="w-3 h-3" />
-                      {visitedCount} visited
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1 text-xs text-rose-400 whitespace-nowrap">
+                    <Bookmark className="w-3 h-3 fill-rose-400" />
+                    {savedCount} saved
+                  </span>
+                )}
+                {visitedCount > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-green-500 whitespace-nowrap">
+                    <CheckCircle2 className="w-3 h-3" />
+                    {visitedCount} visited
+                  </span>
+                )}
               </div>
             </div>
           </div>

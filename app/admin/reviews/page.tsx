@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cities as allCities } from "@/lib/seed-data";
 import AdminReviewsClient from "./AdminReviewsClient";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Reviews — Admin — CityRate" };
 
 export default async function AdminReviewsPage() {
