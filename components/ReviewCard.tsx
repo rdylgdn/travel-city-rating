@@ -13,6 +13,7 @@ export type ReviewProfile = {
   homeFlag: string | null;
   travelStyles: string[];
   badge: TravelerBadge;
+  isVerified?: boolean;
 };
 
 function ConditionalLink({ href, children }: { href?: string; children: React.ReactNode }) {
@@ -69,6 +70,11 @@ export default function ReviewCard({ review, profile, reviewUserId, isOwn, onEdi
               {profile?.badge && (
                 <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", profile.badge.bg, profile.badge.color)}>
                   {profile.badge.label}
+                </span>
+              )}
+              {profile?.isVerified && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-1">
+                  ✓ Verified
                 </span>
               )}
               {!isOwn && reviewUserId && <ReviewAuthorFollow targetUserId={reviewUserId} />}

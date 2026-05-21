@@ -91,6 +91,7 @@ export type Review = {
   createdAt: string;
   updatedAt?: string;
   imageUrls?: string[];
+  status?: "pending" | "approved" | "rejected";
 };
 
 export type AnonymousRating = {

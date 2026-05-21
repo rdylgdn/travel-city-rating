@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     const [savedRes, visitedRes, reviewsRes, profileRes] = await Promise.all([
       supabase.from("saved_cities").select("city_slug, budget_mode").eq("user_id", user.id),
       supabase.from("visited_cities").select("city_slug").eq("user_id", user.id),
-      supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).in("status", ["approved", "pending"]),
       supabase.from("profiles").select("*").eq("id", user.id).single(),
     ]);
 

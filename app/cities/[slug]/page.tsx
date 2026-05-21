@@ -64,7 +64,7 @@ export default async function CityPage({ params, searchParams }: Props) {
   const settings = await getPlatformSettings();
   const seedWeight = settings.seed_weight_enabled ? 100 : 0;
 
-  // Fetch reviews, anonymous ratings, saved/visited counts, and auth in parallel
+  // Fetch reviews (approved only for display), anonymous ratings, saved/visited counts, and auth in parallel
   const [
     { data: dbReviews },
     { data: anonData },
@@ -72,7 +72,7 @@ export default async function CityPage({ params, searchParams }: Props) {
     { count: visitedCount },
     { data: { user } },
   ] = await Promise.all([
-    supabase.from("reviews").select("*").eq("city_slug", slug).order("created_at", { ascending: false }),
+    supabase.from("reviews").select("*").eq("city_slug", slug).eq("status", "approved").order("created_at", { ascending: false }),
     supabase.from("anonymous_ratings").select("overall_score").eq("city_slug", slug),
     supabase.from("saved_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
     supabase.from("visited_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
@@ -83,6 +83,14 @@ export default async function CityPage({ params, searchParams }: Props) {
   const anonScores = (anonData ?? []).map((r) => Number(r.overall_score));
   const blended = blendScores(city, reviews, anonScores, seedWeight);
   const userReview = user ? reviews.find((r: { user_id: string }) => r.user_id === user.id) : null;
+
+  // Check if current user has a pending review not yet visible
+  let userPendingReview: { id: string } | null = null;
+  if (user && !userReview) {
+    const { data: pr } = await supabase
+      .from("reviews").select("id").eq("city_slug", slug).eq("user_id", user.id).eq("status", "pending").maybeSingle();
+    userPendingReview = pr;
+  }
 
   // Fetch profiles + visited counts for all reviewers in parallel
   const reviewerIds = [...new Set(reviews.map((r: { user_id: string }) => r.user_id))];
@@ -109,6 +117,23 @@ export default async function CityPage({ params, searchParams }: Props) {
     );
   }
 
+  // Compute verified status per reviewer (10+ approved reviews)
+  const verifiedMap: Record<string, boolean> = {};
+  if (reviewerIds.length > 0) {
+    const { data: approvedCounts } = await supabase
+      .from("reviews")
+      .select("user_id")
+      .in("user_id", reviewerIds)
+      .eq("status", "approved");
+    const countPerUser: Record<string, number> = {};
+    for (const row of (approvedCounts ?? [])) {
+      countPerUser[row.user_id] = (countPerUser[row.user_id] ?? 0) + 1;
+    }
+    for (const uid of reviewerIds) {
+      verifiedMap[uid] = (countPerUser[uid] ?? 0) >= 10;
+    }
+  }
+
   // Build review profiles
   const reviewProfiles: Record<string, ReviewProfile> = {};
   for (const r of reviews) {
@@ -120,6 +145,7 @@ export default async function CityPage({ params, searchParams }: Props) {
       homeFlag: (p?.home_country_flag as string) ?? null,
       travelStyles: (p?.travel_styles as string[]) ?? [],
       badge: getTravelerBadge(visitedCountPerUser[r.user_id] ?? 0),
+      isVerified: verifiedMap[r.user_id] ?? false,
     };
   }
 
@@ -294,8 +320,16 @@ export default async function CityPage({ params, searchParams }: Props) {
 
           {user ? (
             <>
-              {/* Review form or already-reviewed note */}
-              {!userReview ? (
+              {/* Review form, pending notice, or already-reviewed note */}
+              {userPendingReview ? (
+                <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-700 flex items-start gap-2">
+                  <span className="mt-0.5">⏳</span>
+                  <div>
+                    <p className="font-semibold">Your review is pending admin approval.</p>
+                    <p className="text-yellow-600 mt-0.5">It will appear here once approved. You can still edit it below.</p>
+                  </div>
+                </div>
+              ) : !userReview ? (
                 <div className="mb-6">
                   <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} />
                 </div>

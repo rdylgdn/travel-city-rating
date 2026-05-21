@@ -66,6 +66,7 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
   const router = useRouter();
   const supabase = createClient();
   const isEditing = !!existingReview;
+  const isAdmin = userEmail === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
@@ -85,7 +86,7 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
   const [imagePreviews, setImagePreviews] = useState<string[]>(existingReview?.imageUrls ?? []);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(existingReview?.imageUrls ?? []);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<false | "approved" | "pending">(false);
   const [error, setError] = useState<string | null>(null);
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -132,6 +133,21 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
     const cleanCons = cons.filter((c) => c.trim());
     const monthVisited = month && year ? `${month} ${year}` : null;
 
+    // Determine status: admin + verified reviewers auto-approved
+    const isAdmin = userEmail === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    let status = "pending";
+    if (isAdmin) {
+      status = "approved";
+    } else if (!isEditing) {
+      // Check verified status: 10+ approved reviews
+      const { count } = await supabase
+        .from("reviews")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("status", "approved");
+      if ((count ?? 0) >= 10) status = "approved";
+    }
+
     // Upload new images to Supabase Storage
     const uploadedUrls: string[] = [...existingImageUrls];
     for (const file of imageFiles) {
@@ -160,6 +176,7 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
       pros: cleanPros.length ? cleanPros : null,
       cons: cleanCons.length ? cleanCons : null,
       image_urls: uploadedUrls.length ? uploadedUrls : null,
+      status,
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,city_slug" });
 
@@ -169,17 +186,23 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
     if (onSuccess) {
       onSuccess();
     } else {
-      setSubmitted(true);
+      setSubmitted(status === "approved" ? "approved" : "pending");
     }
     router.refresh();
   }
 
   if (submitted) {
-    return (
+    return submitted === "pending" ? (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center">
+        <CheckCircle2 className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+        <p className="font-semibold text-yellow-800">Review submitted — pending approval</p>
+        <p className="text-sm text-yellow-600 mt-1">An admin will review it shortly. Once approved it will appear here.</p>
+      </div>
+    ) : (
       <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
         <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
         <p className="font-semibold text-green-700">{isEditing ? "Review updated!" : "Review submitted!"}</p>
-        <p className="text-sm text-green-600 mt-1">Thanks — your ratings influence this city's scores.</p>
+        <p className="text-sm text-green-600 mt-1">Your ratings influence this city's scores.</p>
       </div>
     );
   }
