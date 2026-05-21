@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Star, DollarSign, Bookmark, CheckCircle2 } from "lucide-react";
+import { MapPin, Star, DollarSign, Bookmark, CheckCircle2, BarChart2 } from "lucide-react";
 import { useState } from "react";
 import { City, BudgetMode } from "@/lib/types";
 import { cn, scoreColor, budgetLabel } from "@/lib/utils";
@@ -137,7 +137,17 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
               </div>
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>{city.bestSeason}</span>
-                <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/compare?cities=${city.slug}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1 text-gray-400 hover:text-rose-500 transition-colors"
+                    title="Compare this city"
+                  >
+                    <BarChart2 className="w-3.5 h-3.5" />
+                  </Link>
+                  <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
+                </div>
               </div>
               {(savedCount > 0 || visitedCount > 0) && (
                 <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50">
