@@ -1,8 +1,10 @@
-import { cities } from "@/lib/seed-data";
+import { cities as seedCities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import ExploreClient from "@/components/ExploreClient";
 import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
 import { TravelStyle } from "@/lib/types";
+import { getPlatformSettings } from "@/lib/platform-settings";
+import { adminCityToCity } from "@/lib/admin-cities";
 
 function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): Record<string, number> {
   const map: Record<string, number> = Object.fromEntries(slugs.map((s) => [s, 0]));
@@ -14,9 +16,18 @@ function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): R
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const slugs = cities.map((c) => c.slug);
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const [{ data: { user } }, settings, { data: adminCityRows }, { data: archivedRows }] = await Promise.all([
+    supabase.auth.getUser(),
+    getPlatformSettings(),
+    supabase.from("admin_cities").select("*").eq("is_published", true),
+    supabase.from("archived_slugs").select("slug"),
+  ]);
+
+  const archivedSet = new Set((archivedRows ?? []).map((r: { slug: string }) => r.slug));
+  const adminCities = (adminCityRows ?? []).map(adminCityToCity);
+  const cities = [...seedCities.filter((c) => !archivedSet.has(c.slug)), ...adminCities];
+  const slugs = cities.map((c) => c.slug);
 
   const [{ data: reviewRows }, { data: anonRows }, { data: savedRows }, { data: visitedRows }, profileRes, { data: followingRows }] =
     await Promise.all([

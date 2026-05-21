@@ -1,6 +1,5 @@
 import { City } from "./types";
 
-const SEED_WEIGHT = 100;
 const ANON_WEIGHT = 0.1; // 1/10th of a member review
 
 type DbReview = {
@@ -19,8 +18,10 @@ export type BlendedScores = City["scores"] & { reviewCount: number };
 export function blendScores(
   city: City,
   dbReviews: DbReview[],
-  anonScores: number[] = []
+  anonScores: number[] = [],
+  seedWeight: number = 100
 ): BlendedScores {
+  const SEED_WEIGHT = seedWeight;
   function blendCategory(seed: number, userScores: (number | null)[]): number {
     const valid = userScores.filter((s): s is number => s !== null && s > 0);
     if (valid.length === 0) return seed;

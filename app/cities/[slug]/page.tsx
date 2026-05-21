@@ -4,6 +4,8 @@ import { MapPin, Star, Users, Calendar } from "lucide-react";
 import { cities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import { blendScores } from "@/lib/scores";
+import { getPlatformSettings } from "@/lib/platform-settings";
+import { adminCityToCity } from "@/lib/admin-cities";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import ReviewWithActions from "@/components/ReviewWithActions";
@@ -28,6 +30,18 @@ export async function generateStaticParams() {
   return cities.map((c) => ({ slug: c.slug }));
 }
 
+async function getAllCities() {
+  const { createClient: serverClient } = await import("@/utils/supabase/server");
+  const supabase = await serverClient();
+  const [{ data: adminRows }, { data: archivedRows }] = await Promise.all([
+    supabase.from("admin_cities").select("*").eq("is_published", true),
+    supabase.from("archived_slugs").select("slug"),
+  ]);
+  const archived = new Set((archivedRows ?? []).map((r: { slug: string }) => r.slug));
+  const adminCities = (adminRows ?? []).map(adminCityToCity);
+  return [...cities.filter((c) => !archived.has(c.slug)), ...adminCities];
+}
+
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const city = cities.find((c) => c.slug === slug);
@@ -38,7 +52,8 @@ export async function generateMetadata({ params }: Props) {
 export default async function CityPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { budget } = await searchParams;
-  const city = cities.find((c) => c.slug === slug);
+  const allCitiesCombined = await getAllCities();
+  const city = allCitiesCombined.find((c) => c.slug === slug);
   if (!city) notFound();
 
   const validModes: BudgetMode[] = ["budget", "midRange", "luxury"];
@@ -46,6 +61,8 @@ export default async function CityPage({ params, searchParams }: Props) {
     validModes.includes(budget as BudgetMode) ? (budget as BudgetMode) : "budget";
 
   const supabase = await createClient();
+  const settings = await getPlatformSettings();
+  const seedWeight = settings.seed_weight_enabled ? 100 : 0;
 
   // Fetch reviews, anonymous ratings, saved/visited counts, and auth in parallel
   const [
@@ -64,7 +81,7 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   const reviews = dbReviews ?? [];
   const anonScores = (anonData ?? []).map((r) => Number(r.overall_score));
-  const blended = blendScores(city, reviews, anonScores);
+  const blended = blendScores(city, reviews, anonScores, seedWeight);
   const userReview = user ? reviews.find((r: { user_id: string }) => r.user_id === user.id) : null;
 
   // Fetch profiles + visited counts for all reviewers in parallel
@@ -248,7 +265,7 @@ export default async function CityPage({ params, searchParams }: Props) {
         </div>
 
         {/* Best time to visit */}
-        {city.monthlyData && <BestTimeChart monthlyData={city.monthlyData} />}
+        {settings.best_time_chart_enabled && city.monthlyData && <BestTimeChart monthlyData={city.monthlyData} />}
 
         {/* Common complaints */}
         <div>
@@ -262,11 +279,11 @@ export default async function CityPage({ params, searchParams }: Props) {
           </ul>
         </div>
 
-        {/* Anonymous rating — guests only */}
-        {!user && <AnonymousRatingWidget citySlug={city.slug} />}
+        {/* Anonymous rating — guests only, when feature enabled */}
+        {!user && settings.anonymous_ratings_enabled && <AnonymousRatingWidget citySlug={city.slug} />}
 
         {/* Photo gallery */}
-        {galleryImages.length > 0 && <ReviewGallery images={galleryImages} />}
+        {settings.gallery_enabled && galleryImages.length > 0 && <ReviewGallery images={galleryImages} />}
 
         {/* Reviews section */}
         <div>
