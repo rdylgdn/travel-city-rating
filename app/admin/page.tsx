@@ -119,17 +119,19 @@ export default async function AdminOverviewPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {stats.map(({ label, value, icon: Icon, href, color, bg, sub, highlight }) => {
           const card = (
-            <div className={`rounded-2xl p-4 border transition-all ${
+            <div className={`rounded-2xl p-4 border transition-all h-28 flex flex-col justify-between ${
               highlight ? "border-orange-200 bg-orange-50" : `${bg} border-transparent`
             } ${href ? "hover:shadow-sm" : ""}`}>
-              <Icon className={`w-5 h-5 ${highlight ? "text-orange-500" : color} mb-2`} />
-              <p className={`text-2xl font-bold ${highlight ? "text-orange-600" : "text-gray-900"}`}>
-                {value.toLocaleString()}
-              </p>
-              <p className={`text-xs mt-0.5 ${highlight ? "text-orange-500 font-medium" : "text-gray-400"}`}>
-                {label}
-              </p>
-              {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+              <Icon className={`w-5 h-5 ${highlight ? "text-orange-500" : color}`} />
+              <div>
+                <p className={`text-2xl font-bold leading-none ${highlight ? "text-orange-600" : "text-gray-900"}`}>
+                  {value.toLocaleString()}
+                </p>
+                <p className={`text-xs mt-1 ${highlight ? "text-orange-500 font-medium" : "text-gray-400"}`}>
+                  {label}
+                </p>
+                {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+              </div>
             </div>
           );
           return href ? (
