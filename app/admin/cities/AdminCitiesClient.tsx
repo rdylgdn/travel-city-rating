@@ -6,8 +6,45 @@ import { Plus, Pencil, ExternalLink, Archive, ArchiveRestore, Trash2, Eye, EyeOf
 import { createClient } from "@/utils/supabase/client";
 import { City } from "@/lib/types";
 import { AdminCityRow, adminCityToCity } from "@/lib/admin-cities";
+import { COUNTRY_TO_REGION } from "@/lib/country-region-map";
 import { scoreColor } from "@/lib/utils";
 import CityFormModal from "./CityFormModal";
+
+function seedToAdminRow(city: City): AdminCityRow {
+  return {
+    id: city.id,
+    slug: city.slug,
+    name: city.name,
+    country: city.country,
+    country_iso: city.countryIso,
+    region: city.region,
+    image_url: city.imageUrl,
+    summary: city.summary ?? "",
+    why_visit: city.whyVisit ?? "",
+    best_areas: city.bestAreas ?? [],
+    best_things_to_do: city.bestThingsToDo ?? [],
+    best_for: city.bestFor ?? [],
+    common_complaints: city.commonComplaints ?? [],
+    score_overall: city.scores.overall,
+    score_cost_value: city.scores.costValue,
+    score_safety: city.scores.safety,
+    score_food: city.scores.food,
+    score_culture: city.scores.culture,
+    score_nature: city.scores.nature,
+    score_nightlife: city.scores.nightlife,
+    score_ease_of_travel: city.scores.easeOfTravel,
+    budget_budget: city.dailyBudget.budget,
+    budget_mid_range: city.dailyBudget.midRange,
+    budget_luxury: city.dailyBudget.luxury,
+    breakdown_accommodation: city.budgetBreakdown.accommodation,
+    breakdown_food: city.budgetBreakdown.food,
+    breakdown_transport: city.budgetBreakdown.transport,
+    breakdown_activities: city.budgetBreakdown.activities,
+    breakdown_extras: city.budgetBreakdown.extras,
+    best_season: city.bestSeason ?? "",
+    is_published: true,
+  };
+}
 
 type Props = {
   seedCities: City[];
@@ -21,6 +58,7 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
   const [archived, setArchived] = useState<Set<string>>(new Set(initialArchived));
   const [showForm, setShowForm] = useState(false);
   const [editingCity, setEditingCity] = useState<AdminCityRow | null>(null);
+  const [isSeedEdit, setIsSeedEdit] = useState(false);
 
   async function toggleArchiveSeed(slug: string) {
     if (archived.has(slug)) {
@@ -45,11 +83,20 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
 
   function onSaved(row: AdminCityRow) {
     setAdminCities((prev) => {
-      const exists = prev.find((c) => c.id === row.id);
-      return exists ? prev.map((c) => c.id === row.id ? row : c) : [row, ...prev];
+      const exists = prev.find((c) => c.id === row.id || c.slug === row.slug);
+      return exists ? prev.map((c) => (c.id === row.id || c.slug === row.slug) ? row : c) : [row, ...prev];
     });
     setShowForm(false);
     setEditingCity(null);
+    setIsSeedEdit(false);
+  }
+
+  function editSeedCity(city: City) {
+    // Check if already edited (exists in admin_cities)
+    const existing = adminCities.find((c) => c.slug === city.slug);
+    setEditingCity(existing ?? seedToAdminRow(city));
+    setIsSeedEdit(!existing);
+    setShowForm(true);
   }
 
   const totalVisible = seedCities.filter((c) => !archived.has(c.slug)).length + adminCities.filter((c) => c.is_published).length;
@@ -160,6 +207,9 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => editSeedCity(city)} className="p-1.5 rounded-lg hover:bg-gray-100" title="Edit">
+                          <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
                         <button onClick={() => toggleArchiveSeed(city.slug)} className="p-1.5 rounded-lg hover:bg-gray-100" title={isArchived ? "Restore" : "Hide"}>
                           {isArchived ? <ArchiveRestore className="w-3.5 h-3.5 text-green-500" /> : <Archive className="w-3.5 h-3.5 text-gray-400" />}
                         </button>
@@ -179,7 +229,8 @@ export default function AdminCitiesClient({ seedCities, adminCities: initialAdmi
       {showForm && (
         <CityFormModal
           existing={editingCity}
-          onClose={() => { setShowForm(false); setEditingCity(null); }}
+          isSeedEdit={isSeedEdit}
+          onClose={() => { setShowForm(false); setEditingCity(null); setIsSeedEdit(false); }}
           onSaved={onSaved}
         />
       )}
