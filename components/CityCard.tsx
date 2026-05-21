@@ -179,17 +179,18 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                   <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
                 </div>
               </div>
-              {networkVisitedCount > 0 && (
-                <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-gray-50">
-                  <Users className="w-3 h-3 text-rose-400" />
-                  <span className="text-xs text-rose-500 font-medium">
+              {/* Social proof — always rendered, invisible when empty to keep card height uniform */}
+              <div className={cn(
+                "flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50 flex-wrap",
+                (networkVisitedCount > 0 || savedCount > 0 || visitedCount > 0) ? "visible" : "invisible"
+              )}>
+                {networkVisitedCount > 0 && (
+                  <span className="flex items-center gap-1 text-xs text-rose-500 font-medium">
+                    <Users className="w-3 h-3 text-rose-400" />
                     {networkVisitedCount} {networkVisitedCount === 1 ? "friend" : "friends"} visited
                   </span>
-                </div>
-              )}
-              {(savedCount > 0 || visitedCount > 0) && (
-                <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50">
-                  {savedCount > 0 && (
+                )}
+                {savedCount > 0 && (
                     <span className="flex items-center gap-1 text-xs text-rose-400">
                       <Bookmark className="w-3 h-3 fill-rose-400" />
                       {savedCount} saved
@@ -201,8 +202,7 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                       {visitedCount} visited
                     </span>
                   )}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </Link>
