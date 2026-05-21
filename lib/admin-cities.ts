@@ -31,11 +31,17 @@ export type AdminCityRow = {
   breakdown_activities: number;
   breakdown_extras: number;
   best_season: string;
+  budget_breakdowns?: Record<string, Record<string, number>> | null;
   monthly_data?: Record<string, unknown> | null;
   is_published: boolean;
 };
 
+function sumBreakdown(bd: Record<string, number>): number {
+  return Object.values(bd).reduce((a, b) => a + b, 0);
+}
+
 export function adminCityToCity(row: AdminCityRow): City {
+  const bds = row.budget_breakdowns;
   return {
     id: row.id,
     slug: row.slug,
@@ -61,17 +67,23 @@ export function adminCityToCity(row: AdminCityRow): City {
       easeOfTravel: row.score_ease_of_travel ?? 7.0,
     },
     dailyBudget: {
-      budget:   row.budget_budget ?? 50,
-      midRange: row.budget_mid_range ?? 100,
-      luxury:   row.budget_luxury ?? 200,
+      budget:   bds?.budget   ? sumBreakdown(bds.budget)   : (row.budget_budget   ?? 50),
+      midRange: bds?.midRange ? sumBreakdown(bds.midRange) : (row.budget_mid_range ?? 100),
+      luxury:   bds?.luxury   ? sumBreakdown(bds.luxury)   : (row.budget_luxury   ?? 200),
       currency: "USD",
     },
-    budgetBreakdown: {
+    budgetBreakdown: bds?.budget ? {
+      accommodation: bds.budget.accommodation ?? 20,
+      food:          bds.budget.food          ?? 15,
+      transport:     bds.budget.transport     ?? 10,
+      activities:    bds.budget.activities    ?? 10,
+      extras:        bds.budget.extras        ?? 5,
+    } : {
       accommodation: row.breakdown_accommodation ?? 20,
-      food:          row.breakdown_food ?? 15,
-      transport:     row.breakdown_transport ?? 10,
-      activities:    row.breakdown_activities ?? 10,
-      extras:        row.breakdown_extras ?? 5,
+      food:          row.breakdown_food          ?? 15,
+      transport:     row.breakdown_transport     ?? 10,
+      activities:    row.breakdown_activities    ?? 10,
+      extras:        row.breakdown_extras        ?? 5,
     },
     bestSeason: row.best_season ?? "",
     monthlyData: row.monthly_data as Record<string, import("./types").MonthData> | undefined,
