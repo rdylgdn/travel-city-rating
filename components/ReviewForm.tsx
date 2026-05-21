@@ -90,8 +90,14 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const valid = files.filter((f) => {
+      if (!allowed.includes(f.type)) { setError(`"${f.name}" is not supported. Use JPG, PNG, WebP or GIF.`); return false; }
+      if (f.size > 5 * 1024 * 1024) { setError(`"${f.name}" exceeds 5MB.`); return false; }
+      return true;
+    });
     const remaining = 4 - imagePreviews.length;
-    const selected = files.slice(0, remaining);
+    const selected = valid.slice(0, remaining);
     setImageFiles((prev) => [...prev, ...selected]);
     selected.forEach((f) => {
       const url = URL.createObjectURL(f);
@@ -344,9 +350,10 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
 
       {/* Photo upload */}
       <div>
-        <label className="text-sm font-semibold text-gray-700 block mb-2">
+        <label className="text-sm font-semibold text-gray-700 block mb-1">
           Add photos <span className="text-gray-400 font-normal">(up to 4)</span>
         </label>
+        <p className="text-xs text-gray-400 mb-2">JPG, PNG, WebP or GIF · Max 5MB each</p>
         <div className="flex flex-wrap gap-2">
           {imagePreviews.map((src, i) => (
             <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group">
