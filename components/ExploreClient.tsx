@@ -27,9 +27,10 @@ type ExploreProps = {
   anonCounts?: Record<string, number>;
   savedCounts?: Record<string, number>;
   visitedCounts?: Record<string, number>;
+  networkVisitedCounts?: Record<string, number>;
 };
 
-export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {} }: ExploreProps) {
+export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {} }: ExploreProps) {
   const [query, setQuery] = useState("");
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -320,6 +321,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   compareMode={compareMode}
                   isCompared={compareSlugs.includes(city.slug)}
                   onCompareToggle={() => toggleCompareCity(city.slug)}
+                  networkVisitedCount={networkVisitedCounts[city.slug] ?? 0}
                 />
               ))}
             </div>

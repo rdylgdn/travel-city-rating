@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, Check } from "lucide-react";
+import { Camera, Loader2, Check, Link2 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { Profile } from "@/lib/profile";
@@ -30,6 +30,8 @@ export default function ProfileEditor({ userId, profile, displayEmail }: Props) 
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile?.avatar_url ?? null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [username, setUsername] = useState((profile as Profile & { username?: string })?.username ?? "");
+  const [usernameError, setUsernameError] = useState("");
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [homeCountry, setHomeCountry] = useState(profile?.home_country ?? "");
@@ -78,8 +80,16 @@ export default function ProfileEditor({ userId, profile, displayEmail }: Props) 
         avatarUrl = urlData.publicUrl;
       }
 
+      // Validate username if changed
+      if (username) {
+        const clean = username.toLowerCase().replace(/[^a-z0-9_]/g, "");
+        if (clean !== username.toLowerCase()) { setError("Username can only contain letters, numbers and underscores."); return; }
+        if (username.length < 3) { setError("Username must be at least 3 characters."); return; }
+      }
+
       const { error: upsertErr } = await supabase.from("profiles").upsert({
         id: userId,
+        username: username.trim() || null,
         display_name: displayName || null,
         bio: bio || null,
         home_country: homeCountry || null,
@@ -147,6 +157,25 @@ export default function ProfileEditor({ userId, profile, displayEmail }: Props) 
           <input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
             placeholder="How should we call you?"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400" />
+        </div>
+
+        {/* Username */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-1">Username</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">@</span>
+            <input value={username} onChange={(e) => { setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")); setUsernameError(""); }}
+              placeholder="yourname"
+              maxLength={20}
+              className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400" />
+          </div>
+          {usernameError && <p className="text-xs text-red-500 mt-1">{usernameError}</p>}
+          {username && !usernameError && (
+            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+              <Link2 className="w-3 h-3" />
+              cityrate.com/u/{username}
+            </p>
+          )}
         </div>
 
         {/* Bio */}

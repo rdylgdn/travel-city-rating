@@ -18,14 +18,28 @@ export default async function HomePage() {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const [{ data: reviewRows }, { data: anonRows }, { data: savedRows }, { data: visitedRows }, profileRes] =
+  const [{ data: reviewRows }, { data: anonRows }, { data: savedRows }, { data: visitedRows }, profileRes, { data: followingRows }] =
     await Promise.all([
       supabase.from("reviews").select("city_slug"),
       supabase.from("anonymous_ratings").select("city_slug"),
       supabase.from("saved_cities").select("city_slug"),
       supabase.from("visited_cities").select("city_slug"),
       user ? supabase.from("profiles").select("travel_styles, currency").eq("id", user.id).single() : Promise.resolve({ data: null }),
+      user ? supabase.from("follows").select("following_id").eq("follower_id", user.id) : Promise.resolve({ data: [] }),
     ]);
+
+  // Social proof: count how many people you follow have visited each city
+  const networkVisitedCounts: Record<string, number> = {};
+  if (user && (followingRows ?? []).length > 0) {
+    const followingIds = (followingRows ?? []).map((r: { following_id: string }) => r.following_id);
+    const { data: networkVisits } = await supabase
+      .from("visited_cities")
+      .select("city_slug")
+      .in("user_id", followingIds);
+    for (const r of (networkVisits ?? [])) {
+      networkVisitedCounts[r.city_slug] = (networkVisitedCounts[r.city_slug] ?? 0) + 1;
+    }
+  }
 
   const profile = profileRes?.data ?? null;
   const preferredStyles = (profile?.travel_styles ?? []) as TravelStyle[];
@@ -59,6 +73,7 @@ export default async function HomePage() {
         anonCounts={buildCountMap(anonRows, slugs)}
         savedCounts={buildCountMap(savedRows, slugs)}
         visitedCounts={buildCountMap(visitedRows, slugs)}
+        networkVisitedCounts={networkVisitedCounts}
       />
     </div>
   );

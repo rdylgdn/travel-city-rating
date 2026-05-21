@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Star, DollarSign, Bookmark, CheckCircle2, BarChart2 } from "lucide-react";
+import { MapPin, Star, DollarSign, Bookmark, CheckCircle2, BarChart2, Users } from "lucide-react";
 import { useState } from "react";
 import { City, BudgetMode } from "@/lib/types";
 import { cn, scoreColor, budgetLabel } from "@/lib/utils";
@@ -20,9 +20,10 @@ type Props = {
   compareMode?: boolean;
   isCompared?: boolean;
   onCompareToggle?: () => void;
+  networkVisitedCount?: number;
 };
 
-export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount, savedCount = 0, visitedCount = 0, compareMode, isCompared, onCompareToggle }: Props) {
+export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCount, savedCount = 0, visitedCount = 0, compareMode, isCompared, onCompareToggle, networkVisitedCount = 0 }: Props) {
   const dailyBudget = city.dailyBudget[budgetMode];
   const reviewCount = liveReviewCount ?? city.reviewCount;
   const totalCount = reviewCount + (liveAnonCount ?? 0);
@@ -178,6 +179,14 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
                   <span>{totalCount} {totalCount === 1 ? "review" : "reviews"}</span>
                 </div>
               </div>
+              {networkVisitedCount > 0 && (
+                <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-gray-50">
+                  <Users className="w-3 h-3 text-rose-400" />
+                  <span className="text-xs text-rose-500 font-medium">
+                    {networkVisitedCount} {networkVisitedCount === 1 ? "friend" : "friends"} visited
+                  </span>
+                </div>
+              )}
               {(savedCount > 0 || visitedCount > 0) && (
                 <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-gray-50">
                   {savedCount > 0 && (

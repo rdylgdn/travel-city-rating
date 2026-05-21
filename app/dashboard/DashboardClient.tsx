@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Bookmark, Star, Settings, CheckCircle2, Globe } from "lucide-react";
+import Link from "next/link";
+import { Bookmark, Star, Settings, CheckCircle2, Globe, ExternalLink } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
 import { Profile, getTravelerBadge, getContinentsVisited } from "@/lib/profile";
 import SavedCities from "@/components/dashboard/SavedCities";
@@ -101,13 +102,17 @@ export default function DashboardClient({
           )}
         </div>
 
-        {/* Edit profile shortcut */}
-        <button
-          onClick={() => setActiveTab("settings")}
-          className="shrink-0 text-xs text-gray-400 hover:text-gray-600 transition-colors mt-1"
-        >
-          Edit profile
-        </button>
+        {/* Edit profile + view public profile */}
+        <div className="shrink-0 flex flex-col gap-1 mt-1">
+          <button onClick={() => setActiveTab("settings")}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors text-right">
+            Edit profile
+          </button>
+          <Link href={`/u/${userId}`} target="_blank"
+            className="flex items-center gap-1 text-xs text-rose-400 hover:text-rose-500 transition-colors">
+            <ExternalLink className="w-3 h-3" /> Public profile
+          </Link>
+        </div>
       </div>
 
       {/* Stats row */}
