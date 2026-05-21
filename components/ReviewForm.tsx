@@ -33,31 +33,52 @@ const CATEGORY_SCORES = [
   { key: "score_ease_of_travel", label: "Ease of Travel" },
 ] as const;
 
+export type ExistingReview = {
+  travelStyle?: string | null;
+  budgetCategory?: string | null;
+  monthVisited?: string | null;
+  overallRating?: number | null;
+  categoryScores?: Partial<Record<ScoreKey, number>>;
+  writtenReview?: string | null;
+  pros?: string[];
+  cons?: string[];
+};
+
 type Props = {
   citySlug: string;
   userEmail: string;
   userId: string;
+  existingReview?: ExistingReview;
+  onSuccess?: () => void;
 };
 
 type ScoreKey = typeof CATEGORY_SCORES[number]["key"];
 
-export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
+function parseMonthYear(val?: string | null): { month: string; year: string } {
+  if (!val) return { month: "", year: String(new Date().getFullYear()) };
+  const parts = val.split(" ");
+  return { month: parts[0] ?? "", year: parts[1] ?? String(new Date().getFullYear()) };
+}
+
+export default function ReviewForm({ citySlug, userEmail, userId, existingReview, onSuccess }: Props) {
   const router = useRouter();
   const supabase = createClient();
+  const isEditing = !!existingReview;
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
+  const { month: initMonth, year: initYear } = parseMonthYear(existingReview?.monthVisited);
 
-  const [expanded, setExpanded] = useState(false);
-  const [travelStyle, setTravelStyle] = useState<TravelStyle | null>(null);
-  const [budgetCategory, setBudgetCategory] = useState<string | null>(null);
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState(String(currentYear));
-  const [overallRating, setOverallRating] = useState<number | null>(null);
-  const [categoryScores, setCategoryScores] = useState<Partial<Record<ScoreKey, number>>>({});
-  const [writtenReview, setWrittenReview] = useState("");
-  const [pros, setPros] = useState<string[]>([""]);
-  const [cons, setCons] = useState<string[]>([""]);
+  const [expanded, setExpanded] = useState(isEditing);
+  const [travelStyle, setTravelStyle] = useState<TravelStyle | null>((existingReview?.travelStyle as TravelStyle) ?? null);
+  const [budgetCategory, setBudgetCategory] = useState<string | null>(existingReview?.budgetCategory ?? null);
+  const [month, setMonth] = useState(initMonth);
+  const [year, setYear] = useState(initYear);
+  const [overallRating, setOverallRating] = useState<number | null>(existingReview?.overallRating ?? null);
+  const [categoryScores, setCategoryScores] = useState<Partial<Record<ScoreKey, number>>>(existingReview?.categoryScores ?? {});
+  const [writtenReview, setWrittenReview] = useState(existingReview?.writtenReview ?? "");
+  const [pros, setPros] = useState<string[]>(existingReview?.pros?.length ? existingReview.pros : [""]);
+  const [cons, setCons] = useState<string[]>(existingReview?.cons?.length ? existingReview.cons : [""]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,11 +110,17 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
       written_review: writtenReview || null,
       pros: cleanPros.length ? cleanPros : null,
       cons: cleanCons.length ? cleanCons : null,
+      updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,city_slug" });
 
     setLoading(false);
     if (err) { setError(err.message); return; }
-    setSubmitted(true);
+
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      setSubmitted(true);
+    }
     router.refresh();
   }
 
@@ -101,8 +128,8 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
         <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-2" />
-        <p className="font-semibold text-green-700">Review submitted!</p>
-        <p className="text-sm text-green-600 mt-1">Thanks — your ratings will now influence this city's scores.</p>
+        <p className="font-semibold text-green-700">{isEditing ? "Review updated!" : "Review submitted!"}</p>
+        <p className="text-sm text-green-600 mt-1">Thanks — your ratings influence this city's scores.</p>
       </div>
     );
   }
@@ -111,7 +138,7 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
     <form onSubmit={handleSubmit} className="border border-gray-100 rounded-2xl overflow-hidden">
       {/* Header — always visible */}
       <div className="px-5 py-4 bg-gray-50 border-b border-gray-100">
-        <h3 className="font-bold text-gray-800 text-base">Submit a review</h3>
+        <h3 className="font-bold text-gray-800 text-base">{isEditing ? "Edit your review" : "Submit a review"}</h3>
         <p className="text-xs text-gray-400 mt-0.5">Your ratings directly influence this city's scores.</p>
       </div>
 
@@ -274,7 +301,7 @@ export default function ReviewForm({ citySlug, userEmail, userId }: Props) {
       <button type="submit" disabled={loading || !overallRating || !travelStyle}
         className="w-full py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
         {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-        Submit review
+        {isEditing ? "Update review" : "Submit review"}
       </button>
 
       </>}

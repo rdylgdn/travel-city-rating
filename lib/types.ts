@@ -81,6 +81,7 @@ export type Review = {
   pros: string[];
   cons: string[];
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type AnonymousRating = {

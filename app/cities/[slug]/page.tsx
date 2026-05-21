@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { blendScores } from "@/lib/scores";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
+import ReviewWithActions from "@/components/ReviewWithActions";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewsGate from "@/components/ReviewsGate";
 import ReviewForm from "@/components/ReviewForm";
@@ -272,8 +273,9 @@ export default async function CityPage({ params, searchParams }: Props) {
                 <p className="text-gray-400 text-sm">No reviews yet. Be the first!</p>
               ) : (
                 <div className="space-y-3">
-                  {reviews.map((r) => (
-                    <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={{
+                  {reviews.map((r) => {
+                    const isOwn = user?.id === r.user_id;
+                    const reviewData = {
                       id: r.id,
                       cityId: city.id,
                       authorName: reviewProfiles[r.id]?.displayName ?? "Traveler",
@@ -284,9 +286,22 @@ export default async function CityPage({ params, searchParams }: Props) {
                       writtenReview: r.written_review ?? "",
                       pros: r.pros ?? [],
                       cons: r.cons ?? [],
-                      createdAt: r.created_at?.slice(0, 10) ?? "",
-                    }} />
-                  ))}
+                      createdAt: r.created_at ?? "",
+                      updatedAt: r.updated_at ?? "",
+                    };
+                    return isOwn ? (
+                      <ReviewWithActions
+                        key={r.id}
+                        review={{ ...reviewData, rawData: r }}
+                        profile={reviewProfiles[r.id]}
+                        citySlug={slug}
+                        userId={user!.id}
+                        userEmail={user!.email ?? ""}
+                      />
+                    ) : (
+                      <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={reviewData} />
+                    );
+                  })}
                 </div>
               )}
             </>
