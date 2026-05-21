@@ -320,7 +320,7 @@ export default async function CityPage({ params, searchParams }: Props) {
                         userEmail={user!.email ?? ""}
                       />
                     ) : (
-                      <ReviewCard key={r.id} profile={reviewProfiles[r.id]} review={reviewData} />
+                      <ReviewCard key={r.id} profile={reviewProfiles[r.id]} reviewUserId={r.user_id} review={reviewData} />
                     );
                   })}
                 </div>

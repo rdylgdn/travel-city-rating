@@ -1,8 +1,10 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Star, Pencil, Trash2 } from "lucide-react";
 import { Review } from "@/lib/types";
 import { TravelerBadge } from "@/lib/profile";
 import { cn } from "@/lib/utils";
+import ReviewAuthorFollow from "./ReviewAuthorFollow";
 
 export type ReviewProfile = {
   displayName: string;
@@ -13,6 +15,11 @@ export type ReviewProfile = {
   badge: TravelerBadge;
 };
 
+function ConditionalLink({ href, children }: { href?: string; children: React.ReactNode }) {
+  if (!href) return <>{children}</>;
+  return <Link href={href}>{children}</Link>;
+}
+
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
@@ -21,14 +28,16 @@ function formatDate(dateStr: string): string {
 type Props = {
   review: Review & { updatedAt?: string };
   profile?: ReviewProfile;
+  reviewUserId?: string;
   isOwn?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
   onImageClick?: (index: number) => void;
 };
 
-export default function ReviewCard({ review, profile, isOwn, onEdit, onDelete, onImageClick }: Props) {
+export default function ReviewCard({ review, profile, reviewUserId, isOwn, onEdit, onDelete, onImageClick }: Props) {
   const initials = (profile?.displayName ?? review.authorName).slice(0, 2).toUpperCase();
+  const profileHref = reviewUserId ? `/u/${reviewUserId}` : undefined;
   const wasEdited = review.updatedAt && review.createdAt &&
     new Date(review.updatedAt).getTime() - new Date(review.createdAt).getTime() > 5000;
 
@@ -38,26 +47,31 @@ export default function ReviewCard({ review, profile, isOwn, onEdit, onDelete, o
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3 min-w-0">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden flex items-center justify-center shrink-0">
-            {profile?.avatarUrl ? (
-              <Image src={profile.avatarUrl} alt={profile.displayName} width={40} height={40} className="object-cover w-full h-full" />
-            ) : (
-              <span className="text-rose-600 font-bold text-sm">{initials}</span>
-            )}
-          </div>
+          <ConditionalLink href={profileHref}>
+            <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden flex items-center justify-center shrink-0 hover:ring-2 hover:ring-rose-300 transition-all">
+              {profile?.avatarUrl ? (
+                <Image src={profile.avatarUrl} alt={profile.displayName} width={40} height={40} className="object-cover w-full h-full" />
+              ) : (
+                <span className="text-rose-600 font-bold text-sm">{initials}</span>
+              )}
+            </div>
+          </ConditionalLink>
 
           {/* Name + meta */}
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-semibold text-gray-800 text-sm">
-                {profile?.displayName ?? review.authorName}
-              </p>
+              <ConditionalLink href={profileHref}>
+                <p className="font-semibold text-gray-800 text-sm hover:text-rose-500 transition-colors">
+                  {profile?.displayName ?? review.authorName}
+                </p>
+              </ConditionalLink>
               {isOwn && <span className="text-xs px-2 py-0.5 bg-rose-100 text-rose-600 rounded-full font-medium">You</span>}
               {profile?.badge && (
                 <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", profile.badge.bg, profile.badge.color)}>
                   {profile.badge.label}
                 </span>
               )}
+              {!isOwn && reviewUserId && <ReviewAuthorFollow targetUserId={reviewUserId} />}
             </div>
 
             <div className="flex items-center gap-2 flex-wrap mt-0.5">

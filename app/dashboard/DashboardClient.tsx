@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bookmark, Star, Settings, CheckCircle2, Globe, ExternalLink } from "lucide-react";
+import { Bookmark, Star, Settings, CheckCircle2, Globe, ExternalLink, Users } from "lucide-react";
 import { City, Review, BudgetMode } from "@/lib/types";
 import { Profile, getTravelerBadge, getContinentsVisited } from "@/lib/profile";
 import SavedCities from "@/components/dashboard/SavedCities";
@@ -11,15 +11,17 @@ import VisitedCities from "@/components/dashboard/VisitedCities";
 import MyReviews from "@/components/dashboard/MyReviews";
 import ProfileEditor from "@/components/dashboard/ProfileEditor";
 import CountriesModal from "@/components/dashboard/CountriesModal";
+import Following, { FollowingUser } from "@/components/dashboard/Following";
 import { cn } from "@/lib/utils";
 
-type Tab = "saved" | "visited" | "reviews" | "settings";
+type Tab = "saved" | "visited" | "reviews" | "following" | "settings";
 
 const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "saved",    label: "Saved",      icon: Bookmark },
-  { id: "visited",  label: "Visited",    icon: CheckCircle2 },
-  { id: "reviews",  label: "My reviews", icon: Star },
-  { id: "settings", label: "Settings",   icon: Settings },
+  { id: "saved",     label: "Saved",      icon: Bookmark },
+  { id: "visited",   label: "Visited",    icon: CheckCircle2 },
+  { id: "reviews",   label: "My reviews", icon: Star },
+  { id: "following", label: "Following",  icon: Users },
+  { id: "settings",  label: "Settings",   icon: Settings },
 ];
 
 type Props = {
@@ -30,13 +32,14 @@ type Props = {
   savedCities: { city: City; budgetMode: BudgetMode }[];
   visitedCities: City[];
   reviews: Review[];
+  followingUsers: FollowingUser[];
   stats: { savedCount: number; reviewCount: number; visitedCount: number };
 };
 
 const TOTAL_COUNTRIES = 195;
 
 export default function DashboardClient({
-  userId, displayName, displayEmail, profile,
+  userId, displayName, displayEmail, profile, followingUsers,
   savedCities, visitedCities, reviews, stats,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("saved");
@@ -162,7 +165,8 @@ export default function DashboardClient({
       {/* Tab content */}
       {activeTab === "saved"    && <SavedCities cities={savedCities} />}
       {activeTab === "visited"  && <VisitedCities cities={visitedCities} />}
-      {activeTab === "reviews"  && <MyReviews reviews={reviews} />}
+      {activeTab === "reviews"   && <MyReviews reviews={reviews} />}
+      {activeTab === "following" && <Following initialUsers={followingUsers} />}
       {activeTab === "settings" && (
         <ProfileEditor userId={userId} profile={profile} displayEmail={displayEmail} />
       )}

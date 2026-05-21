@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cities as allCities } from "@/lib/seed-data";
 import { BudgetMode, Review } from "@/lib/types";
 import { Profile } from "@/lib/profile";
+import { FollowingUser } from "@/components/dashboard/Following";
 
 export const metadata = { title: "Dashboard — CityRate" };
 
@@ -16,6 +17,7 @@ export default async function DashboardPage() {
   let visitedSlugs: string[] = [];
   let userReviews: Review[] = [];
   let profile: Profile | null = null;
+  let followingUsers: FollowingUser[] = [];
 
   if (user) {
     const [savedRes, visitedRes, reviewsRes, profileRes] = await Promise.all([
@@ -50,6 +52,39 @@ export default async function DashboardPage() {
     });
 
     profile = profileRes.data ?? null;
+
+    // Fetch following list with profiles and visited counts
+    const { data: followRows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+
+    const followingIds = (followRows ?? []).map((r) => r.following_id);
+    if (followingIds.length > 0) {
+      const [{ data: followingProfiles }, { data: followingVisited }] = await Promise.all([
+        supabase.from("profiles").select("id, display_name, username, avatar_url, home_country, home_country_flag, travel_styles").in("id", followingIds),
+        supabase.from("visited_cities").select("user_id, city_slug").in("user_id", followingIds),
+      ]);
+
+      const countriesPerUser: Record<string, Set<string>> = {};
+      for (const row of (followingVisited ?? [])) {
+        const city = allCities.find((c) => c.slug === row.city_slug);
+        if (!city) continue;
+        if (!countriesPerUser[row.user_id]) countriesPerUser[row.user_id] = new Set();
+        countriesPerUser[row.user_id].add(city.countryIso);
+      }
+
+      followingUsers = (followingProfiles ?? []).map((p) => ({
+        id: p.id,
+        display_name: p.display_name,
+        username: p.username,
+        avatar_url: p.avatar_url,
+        home_country: p.home_country,
+        home_country_flag: p.home_country_flag,
+        travel_styles: p.travel_styles,
+        visitedCountryCount: countriesPerUser[p.id]?.size ?? 0,
+      }));
+    }
   }
 
   const savedCities = savedEntries
@@ -75,6 +110,7 @@ export default async function DashboardPage() {
       savedCities={savedCities}
       visitedCities={visitedCities}
       reviews={userReviews}
+      followingUsers={followingUsers}
       stats={{
         savedCount: savedCities.length,
         reviewCount: userReviews.length,
