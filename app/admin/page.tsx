@@ -1,19 +1,112 @@
-import { Globe, Star, Inbox, BarChart2, Users } from "lucide-react";
-import { mockAdminStats } from "@/lib/mock-admin";
-import { cities } from "@/lib/seed-data";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
+import { cities as seedCities } from "@/lib/seed-data";
+import {
+  Globe, Star, BarChart2, Users, Bookmark, CheckCircle2,
+  Inbox, Clock, Briefcase, MessageSquare,
+} from "lucide-react";
 
 export const metadata = { title: "Admin — CityRate" };
 
-export default function AdminOverviewPage() {
-  const stats = mockAdminStats;
+export default async function AdminOverviewPage() {
+  const supabase = await createClient();
 
-  const statCards = [
-    { label: "Total cities", value: stats.totalCities, icon: Globe, href: "/admin/cities" },
-    { label: "Total reviews", value: stats.totalReviews, icon: Star, href: "/admin/reviews" },
-    { label: "Pending suggestions", value: stats.pendingSuggestions, icon: Inbox, href: "/admin/suggestions", highlight: true },
-    { label: "Anonymous ratings", value: stats.totalAnonymousRatings.toLocaleString(), icon: BarChart2, href: null },
-    { label: "Registered users", value: stats.totalUsers, icon: Users, href: null },
+  const [
+    { count: reviewsTotal },
+    { count: reviewsPending },
+    { count: ratingsTotal },
+    { count: usersTotal },
+    { count: savesTotal },
+    { count: visitsTotal },
+    { count: suggestionsTotal },
+    { count: tripsTotal },
+    { count: adminCitiesTotal },
+  ] = await Promise.all([
+    supabase.from("reviews").select("*", { count: "exact", head: true }).eq("status", "approved"),
+    supabase.from("reviews").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("anonymous_ratings").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("saved_cities").select("*", { count: "exact", head: true }),
+    supabase.from("visited_cities").select("*", { count: "exact", head: true }),
+    supabase.from("city_suggestions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("trips").select("*", { count: "exact", head: true }),
+    supabase.from("admin_cities").select("*", { count: "exact", head: true }).eq("is_published", true),
+  ]);
+
+  const totalRatings = (reviewsTotal ?? 0) + (ratingsTotal ?? 0);
+  const totalCities = seedCities.length + (adminCitiesTotal ?? 0);
+
+  const stats = [
+    {
+      label: "Total cities",
+      value: totalCities,
+      icon: Globe,
+      href: "/admin/cities",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Approved reviews",
+      value: reviewsTotal ?? 0,
+      icon: Star,
+      href: "/admin/reviews",
+      color: "text-yellow-600",
+      bg: "bg-yellow-50",
+    },
+    {
+      label: "Total ratings",
+      value: totalRatings,
+      icon: BarChart2,
+      sub: `${reviewsTotal ?? 0} reviews · ${ratingsTotal ?? 0} anonymous`,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+    },
+    {
+      label: "Pending reviews",
+      value: reviewsPending ?? 0,
+      icon: Clock,
+      href: "/admin/reviews",
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+      highlight: (reviewsPending ?? 0) > 0,
+    },
+    {
+      label: "Registered users",
+      value: usersTotal ?? 0,
+      icon: Users,
+      color: "text-gray-600",
+      bg: "bg-gray-50",
+    },
+    {
+      label: "Cities saved",
+      value: savesTotal ?? 0,
+      icon: Bookmark,
+      color: "text-rose-600",
+      bg: "bg-rose-50",
+    },
+    {
+      label: "Cities visited",
+      value: visitsTotal ?? 0,
+      icon: CheckCircle2,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: "Trips created",
+      value: tripsTotal ?? 0,
+      icon: Briefcase,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      label: "Pending suggestions",
+      value: suggestionsTotal ?? 0,
+      icon: Inbox,
+      href: "/admin/suggestions",
+      color: "text-rose-600",
+      bg: "bg-rose-50",
+      highlight: (suggestionsTotal ?? 0) > 0,
+    },
   ];
 
   return (
@@ -23,51 +116,51 @@ export default function AdminOverviewPage() {
         <p className="text-sm text-gray-400 mt-1">Site-wide stats at a glance</p>
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {statCards.map(({ label, value, icon: Icon, href, highlight }) => {
+        {stats.map(({ label, value, icon: Icon, href, color, bg, sub, highlight }) => {
           const card = (
-            <div className={`rounded-xl p-4 border ${highlight ? "bg-rose-50 border-rose-200" : "bg-gray-50 border-gray-100"}`}>
-              <Icon className={`w-4 h-4 mb-2 ${highlight ? "text-rose-500" : "text-gray-400"}`} />
-              <p className={`text-2xl font-bold ${highlight ? "text-rose-600" : "text-gray-800"}`}>{value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+            <div className={`rounded-2xl p-4 border transition-all ${
+              highlight ? "border-orange-200 bg-orange-50" : `${bg} border-transparent`
+            } ${href ? "hover:shadow-sm" : ""}`}>
+              <Icon className={`w-5 h-5 ${highlight ? "text-orange-500" : color} mb-2`} />
+              <p className={`text-2xl font-bold ${highlight ? "text-orange-600" : "text-gray-900"}`}>
+                {value.toLocaleString()}
+              </p>
+              <p className={`text-xs mt-0.5 ${highlight ? "text-orange-500 font-medium" : "text-gray-400"}`}>
+                {label}
+              </p>
+              {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
             </div>
           );
           return href ? (
-            <Link key={label} href={href} className="hover:opacity-80 transition-opacity">{card}</Link>
+            <Link key={label} href={href} className="block">{card}</Link>
           ) : (
             <div key={label}>{card}</div>
           );
         })}
       </div>
 
-      {/* Cities quick list */}
+      {/* Quick links */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">Published cities</h2>
-          <Link href="/admin/cities" className="text-xs text-rose-500 hover:underline">Manage all</Link>
-        </div>
-        <div className="border border-gray-100 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">City</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Score</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Reviews</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">Region</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {cities.slice(0, 5).map((city) => (
-                <tr key={city.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-2.5 font-medium text-gray-800">{city.name}, {city.country}</td>
-                  <td className="px-4 py-2.5 text-gray-600">{city.scores.overall.toFixed(1)}</td>
-                  <td className="px-4 py-2.5 text-gray-600">{city.reviewCount}</td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs">{city.region}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Moderate reviews", desc: `${reviewsPending ?? 0} pending`, href: "/admin/reviews", icon: MessageSquare, urgent: (reviewsPending ?? 0) > 0 },
+            { label: "Manage cities", desc: `${totalCities} published`, href: "/admin/cities", icon: Globe, urgent: false },
+            { label: "City suggestions", desc: `${suggestionsTotal ?? 0} pending`, href: "/admin/suggestions", icon: Inbox, urgent: (suggestionsTotal ?? 0) > 0 },
+            { label: "Platform settings", desc: "Feature flags", href: "/admin/settings", icon: BarChart2, urgent: false },
+          ].map(({ label, desc, href, icon: Icon, urgent }) => (
+            <Link key={label} href={href}
+              className={`flex items-center gap-3 p-3 rounded-2xl border transition-all hover:shadow-sm ${
+                urgent ? "border-orange-200 bg-orange-50" : "border-gray-100 bg-white hover:border-gray-200"
+              }`}>
+              <Icon className={`w-4 h-4 shrink-0 ${urgent ? "text-orange-500" : "text-gray-400"}`} />
+              <div className="min-w-0">
+                <p className={`text-sm font-semibold truncate ${urgent ? "text-orange-700" : "text-gray-700"}`}>{label}</p>
+                <p className={`text-xs ${urgent ? "text-orange-500 font-medium" : "text-gray-400"}`}>{desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
