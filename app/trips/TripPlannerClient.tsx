@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Trash2, Search, MapPin, ChevronUp, ChevronDown, Pencil, Check, X, Briefcase } from "lucide-react";
+import { Plus, Trash2, Search, MapPin, ChevronUp, ChevronDown, Pencil, Check, X, Briefcase, Sparkles, Calendar } from "lucide-react";
 import { City, BudgetMode } from "@/lib/types";
 import { createClient } from "@/utils/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -11,7 +11,7 @@ import { cn, budgetLabel } from "@/lib/utils";
 import BudgetModeSelector from "@/components/BudgetModeSelector";
 
 type TripCity = { id: string; city_slug: string; duration_days: number; position: number };
-type Trip = { id: string; name: string; budget_mode: string; trip_cities: TripCity[]; updated_at: string };
+type Trip = { id: string; name: string; budget_mode: string; trip_cities: TripCity[]; updated_at: string; start_date: string | null; itinerary: unknown | null };
 
 type Props = {
   userId: string;
@@ -195,6 +195,12 @@ export default function TripPlannerClient({ userId, allCities, initialTrips }: P
                 <p className="text-xs font-semibold text-rose-500 mt-0.5">
                   ~{format(tripBudget(trip))} total
                 </p>
+                {!!trip.itinerary && (
+                  <Link href={`/trips/${trip.id}`} onClick={(e) => e.stopPropagation()}
+                    className="mt-2 flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 font-medium">
+                    <Sparkles className="w-3 h-3" /> View itinerary →
+                  </Link>
+                )}
               </button>
             ))}
           </div>
@@ -230,8 +236,23 @@ export default function TripPlannerClient({ userId, allCities, initialTrips }: P
                     {totalDays(activeTrip)} days total · {budgetLabel(activeTrip.budget_mode as BudgetMode)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  <div className="flex items-center gap-1 border border-gray-200 rounded-xl px-2 py-1.5 text-xs text-gray-500">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    <input type="date" defaultValue={activeTrip.start_date ?? ""}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        await supabase.from("trips").update({ start_date: val || null }).eq("id", activeTrip.id);
+                        updateActive({ ...activeTrip, start_date: val || null });
+                      }}
+                      className="outline-none bg-transparent text-xs w-28" />
+                  </div>
                   <BudgetModeSelector value={activeTrip.budget_mode as BudgetMode} onChange={updateBudgetMode} />
+                  <Link href={`/trips/${activeTrip.id}`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 text-xs font-semibold hover:bg-purple-100 transition-colors">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {activeTrip.itinerary ? "View itinerary" : "Generate itinerary"}
+                  </Link>
                   <button onClick={() => deleteTrip(activeTrip.id)}
                     className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
                     <Trash2 className="w-4 h-4 text-red-400" />
