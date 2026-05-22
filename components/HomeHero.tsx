@@ -46,17 +46,17 @@ export default function HomeHero() {
             backgroundPosition: "center",
           }}
         />
-        {/* Gradient fade left */}
+        {/* Gradient fade left — warm cream */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to right, var(--bg-primary) 35%, var(--bg-primary)aa 55%, transparent 100%)`,
+            background: `linear-gradient(to right, #F7F4EE 30%, #F7F4EEcc 50%, #F7F4EE55 70%, transparent 100%)`,
           }}
         />
         {/* Gradient fade bottom */}
         <div
           className="absolute bottom-0 left-0 right-0 h-40"
-          style={{ background: `linear-gradient(to top, var(--bg-primary), transparent)` }}
+          style={{ background: `linear-gradient(to top, #F7F4EE, transparent)` }}
         />
       </div>
 
@@ -89,6 +89,7 @@ export default function HomeHero() {
                   background: "var(--bg-elevated)",
                   border: "1px solid var(--border)",
                   color: "var(--text-primary)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                 }}
               />
             </div>
@@ -109,9 +110,10 @@ export default function HomeHero() {
                 onClick={() => setActiveFilter(activeFilter === f.label ? null : f.label)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                 style={{
-                  background: activeFilter === f.label ? f.color + "33" : "var(--bg-elevated)",
+                  background: activeFilter === f.label ? f.color + "22" : "var(--bg-elevated)",
                   border: `1px solid ${activeFilter === f.label ? f.color : "var(--border)"}`,
                   color: activeFilter === f.label ? f.color : "var(--text-secondary)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: f.color }} />

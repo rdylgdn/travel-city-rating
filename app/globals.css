@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary:    #0B1020;
-  --bg-secondary:  #151B2F;
-  --bg-elevated:   #1B2440;
+  --bg-primary:    #F7F4EE;
+  --bg-secondary:  #FFFCF8;
+  --bg-elevated:   #FFFFFF;
   --brand:         #FF7A59;
   --brand-hover:   #FF8B6E;
   --brand-dark:    #E96A4B;
-  --text-primary:  #F3F4F6;
-  --text-secondary:#A8B0C5;
+  --text-primary:  #111827;
+  --text-secondary:#4B5563;
   --text-muted:    #6B7280;
-  --border:        #27314F;
-  --border-soft:   #202A44;
-  --card-bg:       #151B2F;
-  --card-hover:    #1B2440;
+  --border:        #E6E0D6;
+  --border-soft:   #D6D0C7;
+  --card-bg:       #FFFFFF;
+  --card-hover:    #F9F6F1;
 }
 
 body {
@@ -21,16 +21,16 @@ body {
   color: var(--text-primary);
 }
 
-/* Scrollbar styling for dark theme */
+/* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-secondary); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* Nav link hover */
-.nav-link { color: var(--text-secondary); }
-.nav-link:hover { color: var(--text-primary); }
-
 /* Hide scrollbar for horizontal scroll rows */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Nav link hover */
+.nav-link { color: var(--text-secondary); }
+.nav-link:hover { color: var(--text-primary); }

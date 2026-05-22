@@ -55,8 +55,8 @@ export default function HomeCityRow({ cities, budgetMode, savedCounts, visitedCo
 
           return (
             <Link key={city.id} href={`/cities/${city.slug}?budget=${budgetMode}`}
-              className="group shrink-0 w-52 rounded-2xl overflow-hidden flex flex-col transition-transform hover:-translate-y-1"
-              style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
+              className="group shrink-0 w-52 rounded-2xl overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-lg"
+              style={{ background: "var(--card-bg)", border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
               {/* Image */}
               <div className="relative h-40 overflow-hidden">
                 <Image src={city.imageUrl} alt={city.name} fill
@@ -65,7 +65,7 @@ export default function HomeCityRow({ cities, budgetMode, savedCounts, visitedCo
 
                 {/* Score */}
                 <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(11,16,32,0.85)", backdropFilter: "blur(4px)" }}>
+                  style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
                   <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                   <span className="text-xs font-bold text-white">{city.scores.overall.toFixed(1)}</span>
                 </div>
@@ -74,7 +74,7 @@ export default function HomeCityRow({ cities, budgetMode, savedCounts, visitedCo
                 <button
                   onClick={(e) => { e.preventDefault(); toggleSaved(city.slug, budgetMode); }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: isSaved ? "var(--brand)" : "rgba(11,16,32,0.7)" }}>
+                  style={{ background: isSaved ? "var(--brand)" : "rgba(0,0,0,0.35)" }}>
                   <Bookmark className={`w-3.5 h-3.5 ${isSaved ? "fill-white text-white" : "text-white"}`} />
                 </button>
 

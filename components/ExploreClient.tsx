@@ -113,7 +113,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
   return (
     <div>
       {/* Search + controls bar */}
-      <div className="sticky top-0 z-30 backdrop-blur-sm px-4 py-3" style={{ background: "rgba(11,16,32,0.95)", borderBottom: "1px solid var(--border)" }}>
+      <div className="sticky top-0 z-30 backdrop-blur-sm px-4 py-3" style={{ background: "rgba(247,244,238,0.97)", borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
