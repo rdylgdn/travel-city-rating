@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import ExploreClient from "@/components/ExploreClient";
 import HomeHero from "@/components/HomeHero";
 import HomeFeatureStrips from "@/components/HomeFeatureStrips";
-import HomeSidebar from "@/components/HomeSidebar";
+import HomeUserSection from "@/components/HomeUserSection";
 import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
 import { TravelStyle, BudgetMode } from "@/lib/types";
 import { getPlatformSettings } from "@/lib/platform-settings";
@@ -75,63 +75,52 @@ export default async function HomePage() {
 
   const defaultBudgetMode: BudgetMode = (profile as Profile & { currency?: string })?.currency ? "budget" : "budget";
 
-  const showSidebar = !!user && visitedCities.length > 0;
-
   return (
     <div style={{ minHeight: "100vh" }}>
       {/* Hero */}
       <HomeHero />
 
-      {/* Main content + optional sidebar */}
-      <div className={`max-w-7xl mx-auto px-4 ${showSidebar ? "flex gap-6 items-start" : ""}`}>
-        <div className="flex-1 min-w-0">
-          {/* Personalized recommendations */}
-          {settings.recommendations_enabled && preferredStyles.length > 0 && (
-            <div className="py-4">
-              <PersonalizedRecommendations
-                allCities={cities}
-                preferredStyles={preferredStyles}
-                excludeSlugs={excludeForRec}
-                budgetMode={defaultBudgetMode}
-              />
-            </div>
-          )}
+      {/* Travel DNA + Where You've Been — signed-in users only */}
+      {user && (
+        <HomeUserSection
+          profile={profile}
+          displayName={displayName}
+          visitedCities={visitedCities}
+          visitedCountryCount={visitedCountryCount}
+        />
+      )}
 
-          {/* Feature strips */}
-          <HomeFeatureStrips />
+      {/* Personalized recommendations */}
+      {settings.recommendations_enabled && preferredStyles.length > 0 && (
+        <PersonalizedRecommendations
+          allCities={cities}
+          preferredStyles={preferredStyles}
+          excludeSlugs={excludeForRec}
+          budgetMode={defaultBudgetMode}
+        />
+      )}
 
-          {/* Full explore grid */}
-          <div id="all-cities" className="py-4">
-            <div className="flex items-center justify-between mb-4 px-0">
-              <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>All Cities</h2>
-            </div>
-            <Suspense fallback={null}>
-            <ExploreClient
-              cities={cities}
-              reviewCounts={reviewCounts}
-              anonCounts={anonCounts}
-              savedCounts={savedCounts}
-              visitedCounts={visitedCounts}
-              networkVisitedCounts={networkVisitedCounts}
-              compareEnabled={settings.compare_feature_enabled}
-              budgetModeEnabled={settings.budget_mode_selector}
-              placements={(placementRows ?? []) as PlacementRow[]}
-            />
-            </Suspense>
-          </div>
+      {/* Feature strips */}
+      <HomeFeatureStrips />
+
+      {/* Full explore grid — always full width */}
+      <div id="all-cities" className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>All Cities</h2>
         </div>
-
-        {/* Right sidebar — only for logged-in users with visited cities */}
-        {showSidebar && (
-          <div className="hidden lg:block pt-0 sticky top-16">
-            <HomeSidebar
-              profile={profile}
-              displayName={displayName}
-              visitedCities={visitedCities}
-              visitedCountryCount={visitedCountryCount}
-            />
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <ExploreClient
+            cities={cities}
+            reviewCounts={reviewCounts}
+            anonCounts={anonCounts}
+            savedCounts={savedCounts}
+            visitedCounts={visitedCounts}
+            networkVisitedCounts={networkVisitedCounts}
+            compareEnabled={settings.compare_feature_enabled}
+            budgetModeEnabled={settings.budget_mode_selector}
+            placements={(placementRows ?? []) as PlacementRow[]}
+          />
+        </Suspense>
       </div>
     </div>
   );
