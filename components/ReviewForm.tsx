@@ -133,19 +133,16 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
     const cleanCons = cons.filter((c) => c.trim());
     const monthVisited = month && year ? `${month} ${year}` : null;
 
-    // Determine status: admin + verified reviewers auto-approved
-    const isAdmin = userEmail === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    // Determine status: check role from profiles table
     let status = "pending";
-    if (isAdmin) {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+    const role = profileData?.role ?? "user";
+    if (role === "admin" || role === "verified") {
       status = "approved";
-    } else if (!isEditing) {
-      // Check verified status: 10+ approved reviews
-      const { count } = await supabase
-        .from("reviews")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("status", "approved");
-      if ((count ?? 0) >= 10) status = "approved";
     }
 
     // Upload new images to Supabase Storage
