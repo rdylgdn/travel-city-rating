@@ -52,10 +52,13 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
     regions: [],
   });
 
-  // When URL params change (hero search/filter), sync + scroll to grid
+  // When URL params change (hero search/filter), sync state + scroll
   useEffect(() => {
-    if (urlQuery) setQuery(urlQuery);
-    if (urlStyle) setFilters({ travelStyles: [urlStyle as TravelStyle], regions: [] });
+    setQuery(urlQuery);
+    setFilters({
+      travelStyles: urlStyle ? [urlStyle as TravelStyle] : [],
+      regions: [],
+    });
     if (urlQuery || urlStyle) {
       setTimeout(() => {
         document.getElementById("all-cities")?.scrollIntoView({ behavior: "smooth", block: "start" });

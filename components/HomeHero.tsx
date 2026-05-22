@@ -4,14 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal } from "lucide-react";
 
+// Labels must match TravelStyle values in lib/types.ts exactly
 const QUICK_FILTERS = [
   { label: "Digital Nomad", color: "#3DD9C5" },
-  { label: "Food", color: "#F59E0B" },
-  { label: "Beach", color: "#60A5FA" },
-  { label: "Nature", color: "#4ADE80" },
-  { label: "Nightlife", color: "#A78BFA" },
-  { label: "Budget Friendly", color: "#34D399" },
-  { label: "Culture", color: "#F4C95D" },
+  { label: "Food",          color: "#F59E0B" },
+  { label: "Beach",         color: "#60A5FA" },
+  { label: "Nature",        color: "#4ADE80" },
+  { label: "Nightlife",     color: "#A78BFA" },
+  { label: "Adventure",     color: "#FB7185" },
+  { label: "Culture",       color: "#F4C95D" },
+  { label: "Solo",          color: "#34D399" },
 ];
 
 // Rotating hero city backgrounds
