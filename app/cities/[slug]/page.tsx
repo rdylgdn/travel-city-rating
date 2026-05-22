@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { MapPin, Star, Users, Calendar } from "lucide-react";
-import { cities, cities as allCities } from "@/lib/seed-data";
+import { cities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import { blendScores } from "@/lib/scores";
 import { getPlatformSettings } from "@/lib/platform-settings";
@@ -9,7 +9,10 @@ import { adminCityToCity } from "@/lib/admin-cities";
 import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import ReviewWithActions from "@/components/ReviewWithActions";
-import ReviewGallery, { GalleryImage } from "@/components/ReviewGallery";
+import ReviewGalleryWrapper from "@/components/ReviewGalleryWrapper";
+import type { GalleryImage } from "@/components/ReviewGallery";
+
+const allCities = cities;
 import BestTimeChart from "@/components/BestTimeChart";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewsGate from "@/components/ReviewsGate";
@@ -132,16 +135,24 @@ export default async function CityPage({ params, searchParams }: Props) {
   }
 
   // Build gallery from all reviews with images
-  const galleryImages: GalleryImage[] = reviews.flatMap((r) => {
-    const urls: string[] = r.image_urls ?? [];
-    const profile = reviewProfiles[r.id];
-    return urls.map((url) => ({
-      url,
-      authorName: profile?.displayName ?? r.user_email?.split("@")[0] ?? "Traveler",
-      travelStyle: r.travel_style ?? undefined,
-      monthVisited: r.month_visited ?? undefined,
-    }));
-  });
+  const galleryImages: GalleryImage[] = (() => {
+    try {
+      return reviews.flatMap((r) => {
+        const raw = r.image_urls;
+        // image_urls can be null, undefined, or a string array
+        const urls: string[] = Array.isArray(raw) ? raw.filter((u: unknown) => typeof u === "string") : [];
+        const profile = reviewProfiles[r.id];
+        return urls.map((url) => ({
+          url,
+          authorName: profile?.displayName ?? (r.user_email as string | undefined)?.split("@")[0] ?? "Traveler",
+          travelStyle: r.travel_style ?? undefined,
+          monthVisited: r.month_visited ?? undefined,
+        }));
+      });
+    } catch {
+      return [];
+    }
+  })();
 
   const scoreLabels: [keyof typeof city.scores, string][] = [
     ["overall", "Overall"],
@@ -291,7 +302,7 @@ export default async function CityPage({ params, searchParams }: Props) {
         {!user && settings.anonymous_ratings_enabled && <AnonymousRatingWidget citySlug={city.slug} />}
 
         {/* Photo gallery */}
-        {settings.gallery_enabled && galleryImages.length > 0 && <ReviewGallery images={galleryImages} />}
+        {settings.gallery_enabled && galleryImages.length > 0 && <ReviewGalleryWrapper images={galleryImages} />}
 
         {/* Reviews section */}
         <div>
