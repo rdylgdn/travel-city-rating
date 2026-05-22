@@ -34,6 +34,8 @@ export type AdminCityRow = {
   budget_breakdowns?: Record<string, Record<string, number>> | null;
   monthly_data?: Record<string, unknown> | null;
   is_published: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 function sumBreakdown(bd: Record<string, number>): number {
