@@ -32,6 +32,7 @@ export default function AuthModal({ onClose, defaultMode = "signin" }: Props) {
       if (error) {
         setError(error.message);
       } else {
+        onClose();
         window.location.reload();
       }
     } else {
