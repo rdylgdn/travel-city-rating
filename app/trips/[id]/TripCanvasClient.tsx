@@ -345,22 +345,28 @@ function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleAct
           {/* Accommodation */}
           {day.accommodation && (
             day.accommodation.visible ? (
-              <div className="border border-orange-100 bg-orange-50/40 rounded-xl p-3">
+              <div className="border border-orange-100 bg-orange-50/40 rounded-xl p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-orange-600 mb-1">Where to stay</p>
                     <p className="text-sm text-gray-700">{day.accommodation.content}</p>
-                    {day.accommodation.affiliateUrl && (
-                      <a href={day.accommodation.affiliateUrl} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1.5">
-                        Book via {day.accommodation.affiliateName} <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
                   </div>
                   <button onClick={() => onToggleAccommodation(dayIdx)} className="p-1.5 rounded-lg hover:bg-orange-100 shrink-0" title="Hide">
                     <Eye className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 </div>
+                {day.accommodation.affiliateUrl && (
+                  <div className="flex items-center justify-between gap-2 bg-white border border-orange-100 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded uppercase tracking-wide shrink-0">Affiliated</span>
+                      <span className="text-xs text-gray-600 truncate">Book via {day.accommodation.affiliateName}</span>
+                    </div>
+                    <a href={day.accommodation.affiliateUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-rose-500 font-medium hover:underline shrink-0">
+                      View deal <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
               </div>
             ) : (
               <button onClick={() => onToggleAccommodation(dayIdx)}
