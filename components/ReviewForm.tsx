@@ -52,6 +52,7 @@ type Props = {
   userId: string;
   existingReview?: ExistingReview;
   onSuccess?: () => void;
+  showImages?: boolean;
 };
 
 type ScoreKey = typeof CATEGORY_SCORES[number]["key"];
@@ -62,7 +63,7 @@ function parseMonthYear(val?: string | null): { month: string; year: string } {
   return { month: parts[0] ?? "", year: parts[1] ?? String(new Date().getFullYear()) };
 }
 
-export default function ReviewForm({ citySlug, userEmail, userId, existingReview, onSuccess }: Props) {
+export default function ReviewForm({ citySlug, userEmail, userId, existingReview, onSuccess, showImages = true }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const isEditing = !!existingReview;
@@ -368,8 +369,8 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
         </div>
       </div>
 
-      {/* Photo upload */}
-      <div>
+      {/* Photo upload — only when enabled by admin */}
+      {showImages && <div>
         <label className="text-sm font-semibold text-gray-700 block mb-1">
           Add photos <span className="text-gray-400 font-normal">(up to 4)</span>
         </label>
@@ -392,7 +393,7 @@ export default function ReviewForm({ citySlug, userEmail, userId, existingReview
             </label>
           )}
         </div>
-      </div>
+      </div>}
 
       <button type="submit" disabled={loading || !overallRating || !travelStyle}
         className="w-full py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">

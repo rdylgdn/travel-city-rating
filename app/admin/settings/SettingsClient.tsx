@@ -9,7 +9,7 @@ type Row = { key: string; value: string; label: string | null; description: stri
 const GROUPS: { title: string; keys: string[] }[] = [
   {
     title: "Scoring",
-    keys: ["seed_weight_enabled", "score_display_note"],
+    keys: ["seed_weight_enabled"],
   },
   {
     title: "Ratings & Reviews",
@@ -17,7 +17,7 @@ const GROUPS: { title: string; keys: string[] }[] = [
   },
   {
     title: "Discovery & Social",
-    keys: ["recommendations_enabled", "follow_system_enabled", "public_profiles_enabled", "compare_feature_enabled"],
+    keys: ["recommendations_enabled", "compare_feature_enabled"],
   },
   {
     title: "City Page",

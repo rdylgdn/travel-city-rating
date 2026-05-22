@@ -313,7 +313,7 @@ export default async function CityPage({ params, searchParams }: Props) {
                 </div>
               ) : !userReview ? (
                 <div className="mb-6">
-                  <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} />
+                  <ReviewForm citySlug={slug} userEmail={user.email ?? ""} userId={user.id} showImages={settings.review_images_enabled} />
                 </div>
               ) : (
                 <div className="mb-6 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700">
@@ -360,11 +360,32 @@ export default async function CityPage({ params, searchParams }: Props) {
               )}
             </>
           ) : (
-            /* Guest — blurred gate */
-            reviews.length === 0 ? (
-              <ReviewSignInPrompt />
+            /* Guest — blurred gate (if setting is ON) or open reviews (if OFF) */
+            settings.guest_review_gate ? (
+              reviews.length === 0 ? (
+                <ReviewSignInPrompt />
+              ) : (
+                <ReviewsGate reviewCount={reviews.length} />
+              )
             ) : (
-              <ReviewsGate reviewCount={reviews.length} />
+              <div className="space-y-3">
+                {reviews.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No reviews yet. Sign in to be the first!</p>
+                ) : (
+                  reviews.map((r) => (
+                    <ReviewCard key={r.id} profile={reviewProfiles[r.id]} reviewUserId={r.user_id} review={{
+                      id: r.id, cityId: city.id,
+                      authorName: reviewProfiles[r.id]?.displayName ?? "Traveler",
+                      travelStyle: r.travel_style, budgetCategory: r.budget_category,
+                      monthVisited: r.month_visited ?? "", overallRating: r.overall_rating,
+                      writtenReview: r.written_review ?? "",
+                      pros: r.pros ?? [], cons: r.cons ?? [],
+                      createdAt: r.created_at ?? "", updatedAt: r.updated_at ?? "",
+                      imageUrls: r.image_urls ?? [],
+                    }} />
+                  ))
+                )}
+              </div>
             )
           )}
         </div>

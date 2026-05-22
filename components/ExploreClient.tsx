@@ -28,9 +28,11 @@ type ExploreProps = {
   savedCounts?: Record<string, number>;
   visitedCounts?: Record<string, number>;
   networkVisitedCounts?: Record<string, number>;
+  compareEnabled?: boolean;
+  budgetModeEnabled?: boolean;
 };
 
-export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {} }: ExploreProps) {
+export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {}, compareEnabled = true, budgetModeEnabled = true }: ExploreProps) {
   const [query, setQuery] = useState("");
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -176,7 +178,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
             )}
 
             {/* Compare button */}
-            {compareMode ? (
+            {compareEnabled && (compareMode ? (
               <>
                 <button
                   onClick={compareSlugs.length >= 2 ? openCompare : undefined}
@@ -209,7 +211,8 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                 <BarChart2 className="w-4 h-4" />
                 Compare
               </button>
-            )}
+            ))}
+
 
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -244,10 +247,12 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
         </div>
 
         {/* Budget mode selector */}
-        <div className="max-w-6xl mx-auto mt-2 flex items-center justify-between">
-          <span className="text-xs text-gray-500 font-medium">Showing prices for:</span>
-          <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
-        </div>
+        {budgetModeEnabled && (
+          <div className="max-w-6xl mx-auto mt-2 flex items-center justify-between">
+            <span className="text-xs text-gray-500 font-medium">Showing prices for:</span>
+            <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
+          </div>
+        )}
       </div>
 
       {/* Compare mode banner */}

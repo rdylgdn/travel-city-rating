@@ -69,7 +69,7 @@ export default async function HomePage() {
         </p>
       </div>
 
-      {preferredStyles.length > 0 && (
+      {settings.recommendations_enabled && preferredStyles.length > 0 && (
         <PersonalizedRecommendations
           allCities={cities}
           preferredStyles={preferredStyles}
@@ -85,6 +85,8 @@ export default async function HomePage() {
         savedCounts={buildCountMap(savedRows, slugs)}
         visitedCounts={buildCountMap(visitedRows, slugs)}
         networkVisitedCounts={networkVisitedCounts}
+        compareEnabled={settings.compare_feature_enabled}
+        budgetModeEnabled={settings.budget_mode_selector}
       />
     </div>
   );
