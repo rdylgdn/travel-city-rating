@@ -61,71 +61,53 @@ export async function POST(request: Request) {
     `${w.city} (${w.months.join(", ")}): weather ${w.data[0]?.weather ?? 7}/10, ${w.data[0]?.crowds ?? "Medium"} crowds, ${w.data[0]?.note ?? ""}`
   ).join("\n");
 
-  const tripPlan = tripCities.map((tc: { name: string; country: string; duration_days: number }) =>
-    `${tc.name}, ${tc.country}: ${tc.duration_days} day${tc.duration_days > 1 ? "s" : ""}`
-  ).join(" → ");
+  const totalDays = tripCities.reduce((s: number, tc: { duration_days: number }) => s + tc.duration_days, 0);
 
-  const prompt = `Create a detailed travel itinerary.
+  // Build explicit day breakdown so AI knows exactly what to generate
+  let dayCounter = 0;
+  const dayBreakdown = tripCities.map((tc: { name: string; country: string; duration_days: number; slug: string }) => {
+    const lines = [];
+    for (let d = 1; d <= tc.duration_days; d++) {
+      dayCounter++;
+      const date = startDate
+        ? new Date(new Date(startDate).getTime() + (dayCounter - 1) * 86400000).toISOString().slice(0, 10)
+        : `Day ${dayCounter}`;
+      lines.push(`  - Overall day ${dayCounter}, day ${d} in ${tc.name}: date=${date}, citySlug=${tc.slug}`);
+    }
+    return `${tc.name}, ${tc.country} (${tc.duration_days} days):\n${lines.join("\n")}`;
+  }).join("\n");
 
-Trip: ${tripPlan}
-Start date: ${startDate ?? "not specified"}
+  const prompt = `Create a complete day-by-day travel itinerary for ALL ${totalDays} days of this trip.
+
+IMPORTANT: You MUST generate exactly ${totalDays} day objects in the "days" array — one for every single day listed below. Do not skip any days.
+
+Full day schedule:
+${dayBreakdown}
 
 Weather context:
 ${weatherText || "No weather data available."}
 
-Traveler reviews:
+Traveler reviews for context:
 ${reviewText || "No reviews available."}
 
-Available affiliate partners (use these for accommodation and transport recommendations):
+Available affiliate partners:
 ${affiliateText}
 
-Generate a day-by-day itinerary. Return ONLY valid JSON, no markdown:
-{
-  "days": [
-    {
-      "date": "2025-06-01",
-      "citySlug": "bangkok",
-      "cityName": "Bangkok",
-      "country": "Thailand",
-      "overallDay": 1,
-      "dayInCity": 1,
-      "weather": { "score": 8, "note": "Warm and sunny", "crowds": "Medium" },
-      "area": "Sukhumvit",
-      "activities": [
-        "Visit Wat Pho temple (morning, less crowded)",
-        "Explore Chatuchak Weekend Market",
-        "Rooftop bar at sunset on Asiatique"
-      ],
-      "accommodation": {
-        "content": "Stay in Sukhumvit — well connected, safe, range of options",
-        "affiliateName": "Booking.com",
-        "affiliateUrl": "https://..."
-      },
-      "notes": "Hot day, bring water and light clothing"
-    }
-  ],
-  "intercityTransport": [
-    {
-      "from": "Bangkok",
-      "to": "Tokyo",
-      "content": "Fly Bangkok (BKK) to Tokyo (NRT) — typically 6 hours",
-      "affiliateName": "Skyscanner",
-      "affiliateUrl": "https://..."
-    }
-  ]
-}
+Return ONLY valid compact JSON (no markdown, no newlines inside strings):
+{"days":[{"date":"2025-06-01","citySlug":"barcelona","cityName":"Barcelona","country":"Spain","overallDay":1,"dayInCity":1,"weather":{"score":8,"note":"Warm and sunny","crowds":"Medium"},"area":"Gothic Quarter","activities":["Visit Sagrada Familia (book tickets in advance)","Explore El Born neighbourhood and tapas bars","Sunset walk on Las Ramblas"],"accommodation":{"content":"Stay in Eixample — central, safe, great transport links","affiliateName":null,"affiliateUrl":null},"notes":"Start early to beat the crowds at major sites"}],"intercityTransport":[{"from":"Barcelona","to":"New York City","content":"Fly Barcelona (BCN) to New York (JFK) — ~9 hours","affiliateName":null,"affiliateUrl":null}]}
 
 Rules:
-- 3-4 specific, actionable activities per day
-- Use affiliate links where relevant (accommodation for each city, transport between cities)
-- If no matching affiliate, set affiliateName and affiliateUrl to null
-- activities is an array of strings
-- intercityTransport only when moving between cities`;
+- Generate ALL ${totalDays} days — every day in dayBreakdown must appear
+- 3-4 specific actionable activities per day as an array of strings
+- One accommodation object per day
+- intercityTransport entries only when the city changes between consecutive days
+- If no matching affiliate link available, use null for affiliateName and affiliateUrl
+- Keep all string values concise (max 120 chars each)`;
 
   try {
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      model: "claude-sonnet-4-6",
+      max_tokens: 8192,
       messages: [{ role: "user", content: prompt }],
     });
 

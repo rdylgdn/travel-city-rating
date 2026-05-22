@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -44,6 +44,14 @@ export default function TripCanvasClient({
   const [collapsedDays, setCollapsedDays] = useState<Set<number>>(new Set());
 
   const itinerary = trip.itinerary;
+
+  // Auto-generate on first visit if no itinerary exists
+  useEffect(() => {
+    if (!trip.itinerary && tripCities.length > 0 && !generating) {
+      generate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function saveItinerary(it: Itinerary) {
     await supabase.from("trips").update({ itinerary: it }).eq("id", trip.id);
