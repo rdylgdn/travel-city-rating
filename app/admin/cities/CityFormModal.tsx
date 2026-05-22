@@ -102,7 +102,9 @@ export default function CityFormModal({ existing, isSeedEdit, onClose, onSaved }
   const [breakdowns, setBreakdowns] = useState<Breakdowns>(existingBd ?? DEFAULT_BREAKDOWNS);
 
   // Seasonal
-  const [monthlyData, setMonthlyData] = useState<Record<string, MonthData>>(defaultMonthly());
+  const [monthlyData, setMonthlyData] = useState<Record<string, MonthData>>(
+    (existing?.monthly_data as Record<string, MonthData> | null | undefined) ?? defaultMonthly()
+  );
 
   // Country search
   const filteredCountries = countrySearch.trim()
