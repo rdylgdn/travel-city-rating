@@ -71,6 +71,12 @@ export default function DashboardClient({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
+            {profile?.role === "admin" && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">Admin</span>
+            )}
+            {profile?.role === "verified" && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">✓ Verified</span>
+            )}
             <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", badge.bg, badge.color)}>
               {badge.label}
             </span>

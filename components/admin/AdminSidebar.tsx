@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Globe, MessageSquare, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { LayoutDashboard, Globe, MessageSquare, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin",          label: "Overview", icon: LayoutDashboard,   exact: true },
   { href: "/admin/cities",   label: "Cities",   icon: Globe,             exact: false },
   { href: "/admin/reviews",  label: "Reviews",  icon: MessageSquare,     exact: false },
+  { href: "/admin/users",    label: "Users",    icon: Users,             exact: false },
   { href: "/admin/settings", label: "Settings", icon: SlidersHorizontal, exact: false },
 ];
 

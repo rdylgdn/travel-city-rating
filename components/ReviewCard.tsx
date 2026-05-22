@@ -13,7 +13,7 @@ export type ReviewProfile = {
   homeFlag: string | null;
   travelStyles: string[];
   badge: TravelerBadge;
-  isVerified?: boolean;
+  role?: "user" | "verified" | "admin";
 };
 
 function ConditionalLink({ href, children }: { href?: string; children: React.ReactNode }) {
@@ -72,8 +72,13 @@ export default function ReviewCard({ review, profile, reviewUserId, isOwn, onEdi
                   {profile.badge.label}
                 </span>
               )}
-              {profile?.isVerified && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 flex items-center gap-1">
+              {profile?.role === "admin" && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                  Admin
+                </span>
+              )}
+              {profile?.role === "verified" && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
                   ✓ Verified
                 </span>
               )}

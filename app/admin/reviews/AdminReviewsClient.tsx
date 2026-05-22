@@ -37,6 +37,7 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Revi
   const [reviews, setReviews] = useState<ReviewRow[]>(initial);
   const [filter, setFilter] = useState<Filter>("pending");
   const [loading, setLoading] = useState<string | null>(null);
+  const [promotedUser, setPromotedUser] = useState<string | null>(null);
 
   const counts = {
     all:      reviews.length,
@@ -50,6 +51,28 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Revi
   async function updateStatus(id: string, status: Status) {
     setLoading(id + status);
     await supabase.from("reviews").update({ status }).eq("id", id);
+
+    // Auto-promote to verified when 10th review is approved
+    if (status === "approved") {
+      const review = reviews.find((r) => r.id === id);
+      if (review) {
+        const { count } = await supabase
+          .from("reviews")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", review.user_id)
+          .eq("status", "approved");
+        if ((count ?? 0) >= 10) {
+          const { data: profile } = await supabase
+            .from("profiles").select("role").eq("id", review.user_id).single();
+          if (profile?.role === "user") {
+            await supabase.from("profiles").update({ role: "verified" }).eq("id", review.user_id);
+            setPromotedUser(review.authorName);
+            setTimeout(() => setPromotedUser(null), 4000);
+          }
+        }
+      }
+    }
+
     setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
     setLoading(null);
   }
@@ -77,6 +100,14 @@ export default function AdminReviewsClient({ reviews: initial }: { reviews: Revi
           Approve or reject reviews before they appear publicly. Verified reviewers (10+ approved) bypass this queue.
         </p>
       </div>
+
+      {/* Verified promotion toast */}
+      {promotedUser && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
+          <span>🎉</span>
+          <span><strong>{promotedUser}</strong> has been automatically promoted to <strong>Verified</strong> — 10 approved reviews reached.</span>
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-full p-1 w-fit">

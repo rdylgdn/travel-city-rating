@@ -91,6 +91,12 @@ export default async function PublicProfilePage({ params }: Props) {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
+                {profileData.role === "admin" && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 text-purple-700">Admin</span>
+                )}
+                {profileData.role === "verified" && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">✓ Verified</span>
+                )}
                 <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-full", badge.bg, badge.color)}>
                   {badge.label}
                 </span>

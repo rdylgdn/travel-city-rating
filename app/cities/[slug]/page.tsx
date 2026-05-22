@@ -98,7 +98,7 @@ export default async function CityPage({ params, searchParams }: Props) {
 
   if (reviewerIds.length > 0) {
     const [{ data: profileRows }, { data: visitedRows }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name, avatar_url, home_country, home_country_flag, travel_styles").in("id", reviewerIds),
+      supabase.from("profiles").select("id, display_name, avatar_url, home_country, home_country_flag, travel_styles, role").in("id", reviewerIds),
       supabase.from("visited_cities").select("user_id, city_slug").in("user_id", reviewerIds),
     ]);
 
@@ -116,24 +116,7 @@ export default async function CityPage({ params, searchParams }: Props) {
     );
   }
 
-  // Compute verified status per reviewer (10+ approved reviews)
-  const verifiedMap: Record<string, boolean> = {};
-  if (reviewerIds.length > 0) {
-    const { data: approvedCounts } = await supabase
-      .from("reviews")
-      .select("user_id")
-      .in("user_id", reviewerIds)
-      .eq("status", "approved");
-    const countPerUser: Record<string, number> = {};
-    for (const row of (approvedCounts ?? [])) {
-      countPerUser[row.user_id] = (countPerUser[row.user_id] ?? 0) + 1;
-    }
-    for (const uid of reviewerIds) {
-      verifiedMap[uid] = (countPerUser[uid] ?? 0) >= 10;
-    }
-  }
-
-  // Build review profiles
+  // Build review profiles using role from DB
   const reviewProfiles: Record<string, ReviewProfile> = {};
   for (const r of reviews) {
     const p = profilesMap[r.user_id];
@@ -144,7 +127,7 @@ export default async function CityPage({ params, searchParams }: Props) {
       homeFlag: (p?.home_country_flag as string) ?? null,
       travelStyles: (p?.travel_styles as string[]) ?? [],
       badge: getTravelerBadge(visitedCountPerUser[r.user_id] ?? 0),
-      isVerified: verifiedMap[r.user_id] ?? false,
+      role: ((p?.role as string) ?? "user") as "user" | "verified" | "admin",
     };
   }
 

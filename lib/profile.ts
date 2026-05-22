@@ -1,5 +1,7 @@
 import { City, TravelStyle } from "./types";
 
+export type UserRole = "user" | "verified" | "admin";
+
 export type Profile = {
   id: string;
   display_name: string | null;
@@ -8,6 +10,7 @@ export type Profile = {
   home_country_flag: string | null;
   travel_styles: TravelStyle[] | null;
   avatar_url: string | null;
+  role: UserRole;
   updated_at: string;
 };
 
