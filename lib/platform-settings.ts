@@ -36,9 +36,9 @@ export const SETTINGS_DEFAULTS: PlatformSettings = {
   score_display_note: true,
 };
 
-export async function getPlatformSettings(): Promise<PlatformSettings> {
+export async function getPlatformSettings(existingClient?: Awaited<ReturnType<typeof createClient>>): Promise<PlatformSettings> {
   try {
-    const supabase = await createClient();
+    const supabase = existingClient ?? await createClient();
     const { data } = await supabase.from("platform_settings").select("key, value");
     if (!data) return SETTINGS_DEFAULTS;
     const map: Record<string, string> = {};

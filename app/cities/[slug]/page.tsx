@@ -29,16 +29,6 @@ export async function generateStaticParams() {
   return cities.map((c) => ({ slug: c.slug }));
 }
 
-async function getAllCities() {
-  const supabase = await createClient();
-  const [{ data: adminRows }, { data: archivedRows }] = await Promise.all([
-    supabase.from("admin_cities").select("*").eq("is_published", true),
-    supabase.from("archived_slugs").select("slug"),
-  ]);
-  const archived = new Set((archivedRows ?? []).map((r: { slug: string }) => r.slug));
-  const adminCities = (adminRows ?? []).map(adminCityToCity);
-  return [...cities.filter((c) => !archived.has(c.slug)), ...adminCities];
-}
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -50,7 +40,35 @@ export async function generateMetadata({ params }: Props) {
 export default async function CityPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { budget } = await searchParams;
-  const allCitiesCombined = await getAllCities();
+
+  // Single client for the entire page — avoids multiple cookies() calls on Vercel
+  const supabase = await createClient();
+
+  // Fetch everything in parallel with one client
+  const [
+    settings,
+    { data: adminRows },
+    { data: archivedRows },
+    { data: dbReviews },
+    { data: anonData },
+    { count: savedCount },
+    { count: visitedCount },
+    { data: { user } },
+  ] = await Promise.all([
+    getPlatformSettings(supabase),
+    supabase.from("admin_cities").select("*").eq("is_published", true),
+    supabase.from("archived_slugs").select("slug"),
+    supabase.from("reviews").select("*").eq("city_slug", slug).eq("status", "approved").order("created_at", { ascending: false }),
+    supabase.from("anonymous_ratings").select("overall_score").eq("city_slug", slug),
+    supabase.from("saved_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
+    supabase.from("visited_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
+    supabase.auth.getUser(),
+  ]);
+
+  // Resolve city from seed + admin cities
+  const archived = new Set((archivedRows ?? []).map((r: { slug: string }) => r.slug));
+  const adminCities = (adminRows ?? []).map(adminCityToCity);
+  const allCitiesCombined = [...cities.filter((c) => !archived.has(c.slug)), ...adminCities];
   const city = allCitiesCombined.find((c) => c.slug === slug);
   if (!city) notFound();
 
@@ -58,24 +76,7 @@ export default async function CityPage({ params, searchParams }: Props) {
   const initialBudgetMode: BudgetMode =
     validModes.includes(budget as BudgetMode) ? (budget as BudgetMode) : "budget";
 
-  const supabase = await createClient();
-  const settings = await getPlatformSettings();
   const seedWeight = settings.seed_weight_enabled ? 100 : 0;
-
-  // Fetch reviews (approved only for display), anonymous ratings, saved/visited counts, and auth in parallel
-  const [
-    { data: dbReviews },
-    { data: anonData },
-    { count: savedCount },
-    { count: visitedCount },
-    { data: { user } },
-  ] = await Promise.all([
-    supabase.from("reviews").select("*").eq("city_slug", slug).eq("status", "approved").order("created_at", { ascending: false }),
-    supabase.from("anonymous_ratings").select("overall_score").eq("city_slug", slug),
-    supabase.from("saved_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
-    supabase.from("visited_cities").select("*", { count: "exact", head: true }).eq("city_slug", slug),
-    supabase.auth.getUser(),
-  ]);
 
   const reviews = dbReviews ?? [];
   const anonScores = (anonData ?? []).map((r) => Number(r.overall_score));
