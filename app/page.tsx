@@ -1,8 +1,8 @@
 import { cities as seedCities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
+import { Suspense } from "react";
 import ExploreClient from "@/components/ExploreClient";
 import HomeHero from "@/components/HomeHero";
-import HomeCityRow from "@/components/HomeCityRow";
 import HomeFeatureStrips from "@/components/HomeFeatureStrips";
 import HomeSidebar from "@/components/HomeSidebar";
 import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
@@ -97,16 +97,6 @@ export default async function HomePage() {
             </div>
           )}
 
-          {/* Top cities horizontal row */}
-          <HomeCityRow
-            cities={cities}
-            budgetMode={defaultBudgetMode}
-            savedCounts={savedCounts}
-            visitedCounts={visitedCounts}
-            networkVisitedCounts={networkVisitedCounts}
-            reviewCounts={reviewCounts}
-          />
-
           {/* Feature strips */}
           <HomeFeatureStrips />
 
@@ -115,6 +105,7 @@ export default async function HomePage() {
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>All Cities</h2>
             </div>
+            <Suspense fallback={null}>
             <ExploreClient
               cities={cities}
               reviewCounts={reviewCounts}
@@ -126,6 +117,7 @@ export default async function HomePage() {
               budgetModeEnabled={settings.budget_mode_selector}
               placements={(placementRows ?? []) as PlacementRow[]}
             />
+            </Suspense>
           </div>
         </div>
 

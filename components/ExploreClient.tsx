@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X, Bookmark, CheckCircle2, BarChart2 } from "lucide-react";
-import { City, BudgetMode } from "@/lib/types";
+import { City, BudgetMode, TravelStyle } from "@/lib/types";
 import CityCard from "./CityCard";
 import BudgetModeSelector from "./BudgetModeSelector";
 import FilterPanel, { Filters } from "./FilterPanel";
@@ -35,14 +36,32 @@ type ExploreProps = {
 };
 
 export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {}, compareEnabled = true, budgetModeEnabled = true, placements = [] }: ExploreProps) {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const urlQuery = searchParams.get("q") ?? "";
+  const urlStyle = searchParams.get("style") ?? "";
+
+  const [query, setQuery] = useState(urlQuery);
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
   const [showFilters, setShowFilters] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareSlugs, setCompareSlugs] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ travelStyles: [], regions: [] });
+  const [filters, setFilters] = useState<Filters>({
+    travelStyles: urlStyle ? [urlStyle as TravelStyle] : [],
+    regions: [],
+  });
+
+  // When URL params change (hero search/filter), sync + scroll to grid
+  useEffect(() => {
+    if (urlQuery) setQuery(urlQuery);
+    if (urlStyle) setFilters({ travelStyles: [urlStyle as TravelStyle], regions: [] });
+    if (urlQuery || urlStyle) {
+      setTimeout(() => {
+        document.getElementById("all-cities")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [urlQuery, urlStyle]);
   const { saved, visited, isLoggedIn } = useSavedCities();
   const showingSaved = sortBy === "saved";
   const showingVisited = sortBy === "visited";

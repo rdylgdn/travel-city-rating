@@ -30,7 +30,17 @@ export default function HomeHero() {
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/?q=${encodeURIComponent(query)}`);
+      router.push(`/?q=${encodeURIComponent(query.trim())}#all-cities`);
+    }
+  }
+
+  function handleFilterClick(label: string) {
+    const next = activeFilter === label ? null : label;
+    setActiveFilter(next);
+    if (next) {
+      router.push(`/?style=${encodeURIComponent(next)}#all-cities`);
+    } else {
+      router.push(`/`);
     }
   }
 
@@ -107,7 +117,7 @@ export default function HomeHero() {
             {QUICK_FILTERS.map((f) => (
               <button
                 key={f.label}
-                onClick={() => setActiveFilter(activeFilter === f.label ? null : f.label)}
+                onClick={() => handleFilterClick(f.label)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                 style={{
                   background: activeFilter === f.label ? f.color + "22" : "var(--bg-elevated)",
