@@ -113,20 +113,21 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
   return (
     <div>
       {/* Search + controls bar */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
+      <div className="sticky top-0 z-30 backdrop-blur-sm px-4 py-3" style={{ background: "rgba(11,16,32,0.95)", borderBottom: "1px solid var(--border)" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
             <input
               type="text"
               placeholder="Search cities or countries…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
+              style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
             />
             {query && (
               <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
               </button>
             )}
           </div>
@@ -238,7 +239,8 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                className="px-3 py-2.5 rounded-xl text-sm focus:outline-none"
+              style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}
               >
                 {sortOptions.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -251,7 +253,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
         {/* Budget mode selector */}
         {budgetModeEnabled && (
           <div className="max-w-6xl mx-auto mt-2 flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-medium">Showing prices for:</span>
+            <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Showing prices for:</span>
             <BudgetModeSelector value={budgetMode} onChange={setBudgetMode} />
           </div>
         )}
@@ -286,21 +288,21 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
           <div className="text-center py-16">
             {showingSaved ? (
               <>
-                <p className="text-gray-400 text-lg">No saved cities yet.</p>
+                <p style={{ color: "var(--text-muted)" }} className="text-lg">No saved cities yet.</p>
                 <button onClick={() => setSortBy("score")} className="mt-3 text-rose-500 text-sm font-medium hover:underline">
                   Browse all cities
                 </button>
               </>
             ) : showingVisited ? (
               <>
-                <p className="text-gray-400 text-lg">No visited cities yet.</p>
+                <p style={{ color: "var(--text-muted)" }} className="text-lg">No visited cities yet.</p>
                 <button onClick={() => setSortBy("score")} className="mt-3 text-green-500 text-sm font-medium hover:underline">
                   Browse all cities
                 </button>
               </>
             ) : (
               <>
-                <p className="text-gray-400 text-lg">No cities match your search.</p>
+                <p style={{ color: "var(--text-muted)" }} className="text-lg">No cities match your search.</p>
                 <button
                   onClick={() => { setQuery(""); setFilters({ travelStyles: [], regions: [] }); }}
                   className="mt-3 text-rose-500 text-sm font-medium hover:underline"
@@ -312,7 +314,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
           </div>
         ) : (
           <>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
               {showingSaved ? `${filtered.length} saved` : showingVisited ? `${filtered.length} visited` : `${filtered.length} cities`}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

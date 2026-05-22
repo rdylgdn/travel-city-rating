@@ -1,11 +1,16 @@
 import { cities as seedCities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
 import ExploreClient from "@/components/ExploreClient";
+import HomeHero from "@/components/HomeHero";
+import HomeCityRow from "@/components/HomeCityRow";
+import HomeFeatureStrips from "@/components/HomeFeatureStrips";
+import HomeSidebar from "@/components/HomeSidebar";
 import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
-import { TravelStyle } from "@/lib/types";
+import { TravelStyle, BudgetMode } from "@/lib/types";
 import { getPlatformSettings } from "@/lib/platform-settings";
 import { adminCityToCity } from "@/lib/admin-cities";
 import { PlacementRow } from "@/components/PlacementCard";
+import { Profile } from "@/lib/profile";
 
 function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): Record<string, number> {
   const map: Record<string, number> = Object.fromEntries(slugs.map((s) => [s, 0]));
@@ -37,60 +42,105 @@ export default async function HomePage() {
       supabase.from("anonymous_ratings").select("city_slug"),
       supabase.from("saved_cities").select("city_slug"),
       supabase.from("visited_cities").select("city_slug"),
-      user ? supabase.from("profiles").select("travel_styles, currency").eq("id", user.id).single() : Promise.resolve({ data: null }),
+      user ? supabase.from("profiles").select("*").eq("id", user.id).single() : Promise.resolve({ data: null }),
       user ? supabase.from("follows").select("following_id").eq("follower_id", user.id) : Promise.resolve({ data: [] }),
     ]);
 
-  // Social proof: count how many people you follow have visited each city
+  // Social proof
   const networkVisitedCounts: Record<string, number> = {};
   if (user && (followingRows ?? []).length > 0) {
     const followingIds = (followingRows ?? []).map((r: { following_id: string }) => r.following_id);
-    const { data: networkVisits } = await supabase
-      .from("visited_cities")
-      .select("city_slug")
-      .in("user_id", followingIds);
+    const { data: networkVisits } = await supabase.from("visited_cities").select("city_slug").in("user_id", followingIds);
     for (const r of (networkVisits ?? [])) {
       networkVisitedCounts[r.city_slug] = (networkVisitedCounts[r.city_slug] ?? 0) + 1;
     }
   }
 
-  const profile = profileRes?.data ?? null;
+  const profile = profileRes?.data as Profile | null;
   const preferredStyles = (profile?.travel_styles ?? []) as TravelStyle[];
   const savedSlugs = (savedRows ?? []).map((r) => r.city_slug);
-  const visitedSlugsForRec = (visitedRows ?? []).map((r) => r.city_slug);
-  const excludeForRec = [...new Set([...savedSlugs, ...visitedSlugsForRec])];
+  const visitedSlugsAll = (visitedRows ?? []).map((r) => r.city_slug);
+  const excludeForRec = [...new Set([...savedSlugs, ...visitedSlugsAll])];
+  const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "";
+
+  const visitedCities = visitedSlugsAll
+    .map((slug) => cities.find((c) => c.slug === slug))
+    .filter(Boolean) as typeof cities;
+  const visitedCountryCount = new Set(visitedCities.map((c) => c.countryIso)).size;
+
+  const reviewCounts = buildCountMap(reviewRows, slugs);
+  const anonCounts = buildCountMap(anonRows, slugs);
+  const savedCounts = buildCountMap(savedRows, slugs);
+  const visitedCounts = buildCountMap(visitedRows, slugs);
+
+  const defaultBudgetMode: BudgetMode = (profile as Profile & { currency?: string })?.currency ? "budget" : "budget";
+
+  const showSidebar = !!user && visitedCities.length > 0;
 
   return (
-    <div>
-      <div className="bg-gradient-to-b from-rose-50 to-white px-4 py-8 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Find cities that match <span className="text-rose-500">your travel style</span>
-        </h1>
-        <p className="text-gray-500 mt-2 text-sm sm:text-base">
-          Real traveler ratings · Budget-aware · No booking required
-        </p>
+    <div style={{ minHeight: "100vh" }}>
+      {/* Hero */}
+      <HomeHero />
+
+      {/* Main content + optional sidebar */}
+      <div className={`max-w-7xl mx-auto px-4 ${showSidebar ? "flex gap-6 items-start" : ""}`}>
+        <div className="flex-1 min-w-0">
+          {/* Personalized recommendations */}
+          {settings.recommendations_enabled && preferredStyles.length > 0 && (
+            <div className="py-4">
+              <PersonalizedRecommendations
+                allCities={cities}
+                preferredStyles={preferredStyles}
+                excludeSlugs={excludeForRec}
+                budgetMode={defaultBudgetMode}
+              />
+            </div>
+          )}
+
+          {/* Top cities horizontal row */}
+          <HomeCityRow
+            cities={cities}
+            budgetMode={defaultBudgetMode}
+            savedCounts={savedCounts}
+            visitedCounts={visitedCounts}
+            networkVisitedCounts={networkVisitedCounts}
+            reviewCounts={reviewCounts}
+          />
+
+          {/* Feature strips */}
+          <HomeFeatureStrips />
+
+          {/* Full explore grid */}
+          <div id="all-cities" className="py-4">
+            <div className="flex items-center justify-between mb-4 px-0">
+              <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>All Cities</h2>
+            </div>
+            <ExploreClient
+              cities={cities}
+              reviewCounts={reviewCounts}
+              anonCounts={anonCounts}
+              savedCounts={savedCounts}
+              visitedCounts={visitedCounts}
+              networkVisitedCounts={networkVisitedCounts}
+              compareEnabled={settings.compare_feature_enabled}
+              budgetModeEnabled={settings.budget_mode_selector}
+              placements={(placementRows ?? []) as PlacementRow[]}
+            />
+          </div>
+        </div>
+
+        {/* Right sidebar — only for logged-in users with visited cities */}
+        {showSidebar && (
+          <div className="hidden lg:block pt-0 sticky top-16">
+            <HomeSidebar
+              profile={profile}
+              displayName={displayName}
+              visitedCities={visitedCities}
+              visitedCountryCount={visitedCountryCount}
+            />
+          </div>
+        )}
       </div>
-
-      {settings.recommendations_enabled && preferredStyles.length > 0 && (
-        <PersonalizedRecommendations
-          allCities={cities}
-          preferredStyles={preferredStyles}
-          excludeSlugs={excludeForRec}
-          budgetMode={(profile?.currency ? "budget" : "budget") as "budget"}
-        />
-      )}
-
-      <ExploreClient
-        cities={cities}
-        reviewCounts={buildCountMap(reviewRows, slugs)}
-        anonCounts={buildCountMap(anonRows, slugs)}
-        savedCounts={buildCountMap(savedRows, slugs)}
-        visitedCounts={buildCountMap(visitedRows, slugs)}
-        networkVisitedCounts={networkVisitedCounts}
-        compareEnabled={settings.compare_feature_enabled}
-        budgetModeEnabled={settings.budget_mode_selector}
-        placements={(placementRows ?? []) as PlacementRow[]}
-      />
     </div>
   );
 }

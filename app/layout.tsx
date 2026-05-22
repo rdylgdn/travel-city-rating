@@ -21,33 +21,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const settings = await getPlatformSettings();
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-white text-gray-900 antialiased`}>
+      <body className={`${inter.className} antialiased`} style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <CurrencyProvider>
           <SavedCitiesProvider>
-            <header className="border-b border-gray-100 bg-white">
-              <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 font-bold text-lg text-gray-900">
-                  <Compass className="w-5 h-5 text-rose-500" />
+            <header style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}>
+              <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: "var(--text-primary)" }}>
+                  <Compass className="w-5 h-5" style={{ color: "var(--brand)" }} />
                   CityRate
                 </Link>
-                <nav className="flex items-center gap-4">
-                  {settings.suggest_city_enabled && (
-                    <Link href="/suggest" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
-                      Suggest a city
+                <nav className="flex items-center gap-1">
+                  {[
+                    { href: "/", label: "Explore" },
+                    { href: "/compare", label: "Compare" },
+                    ...(settings.trip_planner_enabled ? [{ href: "/trips", label: "Trips" }] : []),
+                    ...(settings.suggest_city_enabled ? [{ href: "/suggest", label: "Suggest" }] : []),
+                  ].map(({ href, label }) => (
+                    <Link key={label} href={href} className="nav-link px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                      {label}
                     </Link>
-                  )}
-                  {settings.trip_planner_enabled && (
-                    <Link href="/trips" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">
-                      Trip planner
-                    </Link>
-                  )}
+                  ))}
+                </nav>
+                <div className="flex items-center gap-3">
                   <CurrencySelector />
-                  <Suspense fallback={
-                    <div className="w-20 h-8 bg-gray-100 rounded-full animate-pulse" />
-                  }>
+                  <Suspense fallback={<div className="w-20 h-8 rounded-full animate-pulse" style={{ background: "var(--bg-elevated)" }} />}>
                     <HeaderAuth />
                   </Suspense>
-                </nav>
+                </div>
               </div>
             </header>
             <main>{children}</main>

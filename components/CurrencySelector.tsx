@@ -47,7 +47,8 @@ export default function CurrencySelector() {
       <div className="relative" ref={ref}>
         <button
           onClick={handleOpen}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors font-medium"
+          className="flex items-center gap-1 text-sm font-medium transition-colors"
+          style={{ color: "var(--text-secondary)" }}
         >
           <span>{currentInfo?.symbol.trim()}</span>
           <span>{currency}</span>
