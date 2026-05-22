@@ -41,7 +41,7 @@ export default async function HomePage() {
       supabase.from("reviews").select("city_slug"),
       supabase.from("anonymous_ratings").select("city_slug"),
       supabase.from("saved_cities").select("city_slug"),
-      supabase.from("visited_cities").select("city_slug"),
+      supabase.from("visited_cities").select("city_slug, user_id"),
       user ? supabase.from("profiles").select("*").eq("id", user.id).single() : Promise.resolve({ data: null }),
       user ? supabase.from("follows").select("following_id").eq("follower_id", user.id) : Promise.resolve({ data: [] }),
     ]);
@@ -59,7 +59,11 @@ export default async function HomePage() {
   const profile = profileRes?.data as Profile | null;
   const preferredStyles = (profile?.travel_styles ?? []) as TravelStyle[];
   const savedSlugs = (savedRows ?? []).map((r) => r.city_slug);
-  const visitedSlugsAll = (visitedRows ?? []).map((r) => r.city_slug);
+  // All slugs (any user) — used for city card "X visited" counts
+  // Current user's slugs only — used for sidebar, recommendations exclusion
+  const visitedSlugsAll = user
+    ? (visitedRows ?? []).filter((r: { user_id: string }) => r.user_id === user.id).map((r) => r.city_slug)
+    : [];
   const excludeForRec = [...new Set([...savedSlugs, ...visitedSlugsAll])];
   const displayName = profile?.display_name ?? user?.email?.split("@")[0] ?? "";
 
