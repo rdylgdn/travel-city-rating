@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import ExploreClient from "@/components/ExploreClient";
 import HomeHero from "@/components/HomeHero";
 import HomeFeatureStrips from "@/components/HomeFeatureStrips";
-import HomeUserSection from "@/components/HomeUserSection";
+import HomeSidebarFloat from "@/components/HomeSidebarFloat";
 import PersonalizedRecommendations from "@/components/PersonalizedRecommendations";
 import { TravelStyle, BudgetMode } from "@/lib/types";
 import { getPlatformSettings } from "@/lib/platform-settings";
@@ -80,9 +80,9 @@ export default async function HomePage() {
       {/* Hero */}
       <HomeHero />
 
-      {/* Travel DNA + Where You've Been — signed-in users only */}
+      {/* Floating Travel DNA + Where You've Been — overlays page, doesn't affect layout */}
       {user && (
-        <HomeUserSection
+        <HomeSidebarFloat
           profile={profile}
           displayName={displayName}
           visitedCities={visitedCities}
