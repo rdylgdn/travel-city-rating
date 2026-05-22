@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Star, DollarSign, Bookmark, CheckCircle2, BarChart2, Users } from "lucide-react";
+import { MapPin, Star, Wallet, Bookmark, CheckCircle2, BarChart2, Users } from "lucide-react";
 import { useState } from "react";
 import { City, BudgetMode } from "@/lib/types";
 import { cn, scoreColor, budgetLabel } from "@/lib/utils";
@@ -155,7 +155,7 @@ export default function CityCard({ city, budgetMode, liveReviewCount, liveAnonCo
               {/* Budget */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
-                  <DollarSign className="w-4 h-4 text-gray-400" />
+                  <Wallet className="w-4 h-4 text-gray-400" />
                   <span className="text-sm font-semibold text-gray-800">{format(dailyBudget)}/day</span>
                 </div>
                 <span className="text-xs text-gray-400">{budgetLabel(budgetMode)}</span>
