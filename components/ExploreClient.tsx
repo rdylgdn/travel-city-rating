@@ -109,7 +109,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
   return (
     <div>
       {/* Search + controls bar */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -252,7 +252,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
 
       {/* Compare mode banner */}
       {compareMode && (
-        <div className="bg-rose-50 border-b border-rose-100 px-4 py-2.5">
+        <div className="bg-rose-50 border-b border-rose-100 px-4 py-2.5 sticky top-[var(--header-h,112px)] z-20">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <p className="text-sm text-rose-600 font-medium">
               <BarChart2 className="w-4 h-4 inline mr-1.5" />
