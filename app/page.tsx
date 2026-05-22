@@ -84,6 +84,7 @@ export default async function HomePage() {
       {user && (
         <HomeSidebarFloat
           profile={profile}
+          userId={user.id}
           displayName={displayName}
           visitedCities={visitedCities}
           visitedCountryCount={visitedCountryCount}
