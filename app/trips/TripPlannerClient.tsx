@@ -208,56 +208,46 @@ export default function TripPlannerClient({ userId, allCities, initialTrips }: P
           {/* Active trip editor */}
           {activeTrip && (
             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl overflow-hidden">
-              {/* Trip header */}
-              <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
+              {/* Trip header — row 1: name + delete */}
+              <div className="px-5 pt-4 pb-2 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   {editingName ? (
                     <div className="flex gap-2">
                       <input autoFocus value={editNameVal} onChange={(e) => setEditNameVal(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && saveName()}
                         className="flex-1 px-2 py-1 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400" />
-                      <button onClick={saveName} className="p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600">
-                        <Check className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
-                        <X className="w-3.5 h-3.5 text-gray-400" />
-                      </button>
+                      <button onClick={saveName} className="p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600"><Check className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setEditingName(false)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><X className="w-3.5 h-3.5 text-gray-400" /></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <h2 className="font-bold text-gray-900">{activeTrip.name}</h2>
+                      <h2 className="font-bold text-gray-900 text-lg truncate">{activeTrip.name}</h2>
                       <button onClick={() => { setEditingName(true); setEditNameVal(activeTrip.name); }}
-                        className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-                        <Pencil className="w-3.5 h-3.5 text-gray-400" />
-                      </button>
+                        className="p-1 rounded-lg hover:bg-gray-100 shrink-0"><Pencil className="w-3.5 h-3.5 text-gray-400" /></button>
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {totalDays(activeTrip)} days total · {budgetLabel(activeTrip.budget_mode as BudgetMode)}
+                    {totalDays(activeTrip)} days total
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                  <div className="flex items-center gap-1 border border-gray-200 rounded-xl px-2 py-1.5 text-xs text-gray-500">
-                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <input type="date" defaultValue={activeTrip.start_date ?? ""}
-                      onChange={async (e) => {
-                        const val = e.target.value;
-                        await supabase.from("trips").update({ start_date: val || null }).eq("id", activeTrip.id);
-                        updateActive({ ...activeTrip, start_date: val || null });
-                      }}
-                      className="outline-none bg-transparent text-xs w-28" />
-                  </div>
-                  <BudgetModeSelector value={activeTrip.budget_mode as BudgetMode} onChange={updateBudgetMode} />
-                  <Link href={`/trips/${activeTrip.id}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 text-xs font-semibold hover:bg-purple-100 transition-colors">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {activeTrip.itinerary ? "View itinerary" : "Generate itinerary"}
-                  </Link>
-                  <button onClick={() => deleteTrip(activeTrip.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
+                <button onClick={() => deleteTrip(activeTrip.id)} className="p-1.5 rounded-lg hover:bg-red-50 shrink-0">
+                  <Trash2 className="w-4 h-4 text-red-400" />
+                </button>
+              </div>
+
+              {/* Row 2: start date + budget mode */}
+              <div className="px-5 pb-3 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600">
+                  <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+                  <input type="date" defaultValue={activeTrip.start_date ?? ""}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      await supabase.from("trips").update({ start_date: val || null }).eq("id", activeTrip.id);
+                      updateActive({ ...activeTrip, start_date: val || null });
+                    }}
+                    className="outline-none bg-transparent text-sm" />
                 </div>
+                <BudgetModeSelector value={activeTrip.budget_mode as BudgetMode} onChange={updateBudgetMode} />
               </div>
 
               {/* Budget summary */}
@@ -343,6 +333,17 @@ export default function TripPlannerClient({ userId, allCities, initialTrips }: P
                   </div>
                 )}
               </div>
+
+              {/* Generate itinerary — bottom right */}
+              {activeTrip.trip_cities.length > 0 && (
+                <div className="px-4 py-3 border-t border-gray-50 flex justify-end">
+                  <Link href={`/trips/${activeTrip.id}`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500 text-white text-sm font-semibold hover:bg-purple-600 transition-colors shadow-sm">
+                    <Sparkles className="w-4 h-4" />
+                    {activeTrip.itinerary ? "View itinerary" : "Generate itinerary"}
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
