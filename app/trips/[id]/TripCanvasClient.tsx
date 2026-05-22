@@ -33,8 +33,8 @@ function weatherIcon(score: number) {
 }
 
 export default function TripCanvasClient({
-  trip: initialTrip, tripCities, userId,
-}: { trip: Trip; tripCities: TripCity[]; userId: string }) {
+  trip: initialTrip, tripCities, userId, showAffiliates = true,
+}: { trip: Trip; tripCities: TripCity[]; userId: string; showAffiliates?: boolean }) {
   const supabase = createClient();
   const { format } = useCurrency();
   const [trip, setTrip] = useState<Trip>(initialTrip);
@@ -207,7 +207,7 @@ export default function TripCanvasClient({
                 isCollapsed={isCollapsed} onToggleCollapse={() => toggleDay(day.overallDay)}
                 onToggleActivity={toggleActivity} onDeleteActivity={deleteActivity}
                 onAddActivity={addActivity} onToggleAccommodation={toggleAccommodation}
-                format={format}
+                format={format} showAffiliates={showAffiliates}
               />
             );
           })}
@@ -222,7 +222,7 @@ export default function TripCanvasClient({
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-700">{t.from} → {t.to}</p>
                       <p className="text-sm text-gray-600 mt-0.5">{t.content}</p>
-                      {t.affiliateUrl && (
+                      {showAffiliates && t.affiliateUrl && (
                         <a href={t.affiliateUrl} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1">
                           Book via {t.affiliateName} <ExternalLink className="w-3 h-3" />
@@ -249,7 +249,7 @@ export default function TripCanvasClient({
   );
 }
 
-function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleActivity, onDeleteActivity, onAddActivity, onToggleAccommodation, format }: {
+function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleActivity, onDeleteActivity, onAddActivity, onToggleAccommodation, format, showAffiliates }: {
   day: ItineraryDay; dayIdx: number; city: City | null;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -258,6 +258,7 @@ function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleAct
   onAddActivity: (dayIdx: number, content: string) => void;
   onToggleAccommodation: (dayIdx: number) => void;
   format: (n: number) => string;
+  showAffiliates?: boolean;
 }) {
   const [newActivity, setNewActivity] = useState("");
   const [showAddInput, setShowAddInput] = useState(false);
@@ -355,7 +356,7 @@ function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleAct
                     <Eye className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 </div>
-                {day.accommodation.affiliateUrl && (
+                {showAffiliates && day.accommodation.affiliateUrl && (
                   <div className="flex items-center justify-between gap-2 bg-white border border-orange-100 rounded-lg px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded uppercase tracking-wide shrink-0">Affiliated</span>

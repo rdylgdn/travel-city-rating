@@ -16,6 +16,7 @@ export type PlatformSettings = {
   suggest_city_enabled: boolean;
   budget_mode_selector: boolean;
   score_display_note: boolean;
+  trip_affiliates_enabled: boolean;
 };
 
 export const SETTINGS_DEFAULTS: PlatformSettings = {
@@ -34,6 +35,7 @@ export const SETTINGS_DEFAULTS: PlatformSettings = {
   suggest_city_enabled: true,
   budget_mode_selector: true,
   score_display_note: true,
+  trip_affiliates_enabled: true,
 };
 
 export async function getPlatformSettings(existingClient?: Awaited<ReturnType<typeof createClient>>): Promise<PlatformSettings> {
@@ -59,6 +61,7 @@ export async function getPlatformSettings(existingClient?: Awaited<ReturnType<ty
       suggest_city_enabled:      (map.suggest_city_enabled ?? "true") === "true",
       budget_mode_selector:      (map.budget_mode_selector ?? "true") === "true",
       score_display_note:        (map.score_display_note ?? "true") === "true",
+    trip_affiliates_enabled:   (map.trip_affiliates_enabled ?? "true") === "true",
     };
   } catch {
     return SETTINGS_DEFAULTS;

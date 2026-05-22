@@ -9,6 +9,7 @@ import FilterPanel, { Filters } from "./FilterPanel";
 import { useSavedCities } from "@/contexts/SavedCitiesContext";
 import { cn } from "@/lib/utils";
 import CompareModal from "./CompareModal";
+import PlacementCard, { PlacementRow } from "./PlacementCard";
 
 type SortOption = "score" | "budget_asc" | "budget_desc" | "reviews" | "saved" | "visited" | "top_saved" | "top_visited";
 
@@ -30,9 +31,10 @@ type ExploreProps = {
   networkVisitedCounts?: Record<string, number>;
   compareEnabled?: boolean;
   budgetModeEnabled?: boolean;
+  placements?: PlacementRow[];
 };
 
-export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {}, compareEnabled = true, budgetModeEnabled = true }: ExploreProps) {
+export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = {}, savedCounts = {}, visitedCounts = {}, networkVisitedCounts = {}, compareEnabled = true, budgetModeEnabled = true, placements = [] }: ExploreProps) {
   const [query, setQuery] = useState("");
   const [budgetMode, setBudgetMode] = useState<BudgetMode>("budget");
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -314,21 +316,43 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
               {showingSaved ? `${filtered.length} saved` : showingVisited ? `${filtered.length} visited` : `${filtered.length} cities`}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filtered.map((city) => (
-                <CityCard
-                  key={city.id}
-                  city={city}
-                  budgetMode={budgetMode}
-                  liveReviewCount={reviewCounts[city.slug]}
-                  liveAnonCount={anonCounts[city.slug]}
-                  savedCount={savedCounts[city.slug] ?? 0}
-                  visitedCount={visitedCounts[city.slug] ?? 0}
-                  compareMode={compareMode}
-                  isCompared={compareSlugs.includes(city.slug)}
-                  onCompareToggle={() => toggleCompareCity(city.slug)}
-                  networkVisitedCount={networkVisitedCounts[city.slug] ?? 0}
-                />
-              ))}
+              {(() => {
+                // Build a map of position → placements (position 0 = auto, inserted every 4th slot)
+                const autoPlacments = placements.filter((p) => !p.grid_position);
+                const fixedPlacements = Object.fromEntries(
+                  placements.filter((p) => p.grid_position > 0).map((p) => [p.grid_position - 1, p])
+                );
+                let autoIdx = 0;
+                const items: React.ReactNode[] = [];
+                filtered.forEach((city, i) => {
+                  // Insert fixed placement before this index if specified
+                  if (fixedPlacements[i]) {
+                    const pl = fixedPlacements[i];
+                    items.push(<PlacementCard key={`pl-fixed-${pl.id}`} placement={pl} />);
+                  }
+                  // Insert auto placement every 4th position
+                  if (i > 0 && i % 4 === 0 && autoIdx < autoPlacments.length) {
+                    const pl = autoPlacments[autoIdx++];
+                    items.push(<PlacementCard key={`pl-auto-${pl.id}`} placement={pl} />);
+                  }
+                  items.push(
+                    <CityCard
+                      key={city.id}
+                      city={city}
+                      budgetMode={budgetMode}
+                      liveReviewCount={reviewCounts[city.slug]}
+                      liveAnonCount={anonCounts[city.slug]}
+                      savedCount={savedCounts[city.slug] ?? 0}
+                      visitedCount={visitedCounts[city.slug] ?? 0}
+                      compareMode={compareMode}
+                      isCompared={compareSlugs.includes(city.slug)}
+                      onCompareToggle={() => toggleCompareCity(city.slug)}
+                      networkVisitedCount={networkVisitedCounts[city.slug] ?? 0}
+                    />
+                  );
+                });
+                return items;
+              })()}
             </div>
           </>
         )}

@@ -25,7 +25,7 @@ const GROUPS: { title: string; keys: string[] }[] = [
   },
   {
     title: "Features",
-    keys: ["trip_planner_enabled", "suggest_city_enabled"],
+    keys: ["trip_planner_enabled", "trip_affiliates_enabled", "suggest_city_enabled"],
   },
 ];
 

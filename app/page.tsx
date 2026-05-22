@@ -5,6 +5,7 @@ import PersonalizedRecommendations from "@/components/PersonalizedRecommendation
 import { TravelStyle } from "@/lib/types";
 import { getPlatformSettings } from "@/lib/platform-settings";
 import { adminCityToCity } from "@/lib/admin-cities";
+import { PlacementRow } from "@/components/PlacementCard";
 
 function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): Record<string, number> {
   const map: Record<string, number> = Object.fromEntries(slugs.map((s) => [s, 0]));
@@ -17,11 +18,12 @@ function buildCountMap(rows: { city_slug: string }[] | null, slugs: string[]): R
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const [{ data: { user } }, settings, { data: adminCityRows }, { data: archivedRows }] = await Promise.all([
+  const [{ data: { user } }, settings, { data: adminCityRows }, { data: archivedRows }, { data: placementRows }] = await Promise.all([
     supabase.auth.getUser(),
     getPlatformSettings(),
     supabase.from("admin_cities").select("*").eq("is_published", true),
     supabase.from("archived_slugs").select("slug"),
+    supabase.from("placements").select("*").eq("is_active", true).order("grid_position").order("created_at"),
   ]);
 
   const archivedSet = new Set((archivedRows ?? []).map((r: { slug: string }) => r.slug));
@@ -87,6 +89,7 @@ export default async function HomePage() {
         networkVisitedCounts={networkVisitedCounts}
         compareEnabled={settings.compare_feature_enabled}
         budgetModeEnabled={settings.budget_mode_selector}
+        placements={(placementRows ?? []) as PlacementRow[]}
       />
     </div>
   );
