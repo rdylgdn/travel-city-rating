@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Bookmark, Star, Settings, CheckCircle2, Globe, ExternalLink, Users } from "lucide-react";
@@ -42,7 +43,9 @@ export default function DashboardClient({
   userId, displayName, displayEmail, profile, followingUsers,
   savedCities, visitedCities, reviews, stats,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("saved");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as Tab) ?? "saved";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [showMap, setShowMap] = useState(false);
 
   const visitedCountryCount = new Set(visitedCities.map((c) => c.countryIso)).size;

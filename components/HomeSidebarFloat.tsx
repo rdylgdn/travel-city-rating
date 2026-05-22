@@ -45,8 +45,7 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
       >
         <div className="w-[272px] space-y-3 pr-0 pl-3 py-2">
           {/* Travel DNA card */}
-          <Link href="/dashboard"
-            className="block rounded-2xl p-4 shadow-xl transition-all hover:shadow-2xl"
+          <div className="rounded-2xl p-4 shadow-xl"
             style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Travel DNA</p>
@@ -56,7 +55,7 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center shrink-0"
                 style={{ background: "#FF7A5918" }}>
                 {profile?.avatar_url ? (
@@ -80,7 +79,7 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
             </div>
 
             {travelStyles.length > 0 && (
-              <div className="flex gap-1 flex-wrap mt-3">
+              <div className="flex gap-1 flex-wrap mb-3">
                 {travelStyles.slice(0, 3).map((s) => (
                   <span key={s} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                     style={{ background: "var(--bg-primary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
@@ -89,38 +88,45 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
                 ))}
               </div>
             )}
-          </Link>
+
+            <Link href="/dashboard?tab=settings"
+              className="block text-center text-xs font-semibold py-1.5 rounded-xl transition-all hover:opacity-80"
+              style={{ background: "var(--bg-primary)", color: "var(--brand)", border: "1px solid var(--border)" }}>
+              See full profile →
+            </Link>
+          </div>
 
           {/* Where you've been */}
           <div className="rounded-2xl p-4 shadow-xl"
             style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
 
-            {/* Header — single line */}
-            <div className="flex items-center gap-2 mb-3">
+            {/* Header: title + globe icon */}
+            <div className="flex items-center gap-1.5 mb-0.5">
               <Globe className="w-3.5 h-3.5 shrink-0" style={{ color: "#3DD9C5" }} />
-              <p className="text-xs font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--text-muted)" }}>Where you&apos;ve been</p>
-              <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"
-                style={{ background: "#3DD9C518", color: "#3DD9C5" }}>
-                {visitedCountryCount} countries
-              </span>
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Where you&apos;ve been</p>
             </div>
+            {/* Country count below title */}
+            <p className="text-sm font-bold mb-3" style={{ color: "#3DD9C5" }}>
+              {visitedCountryCount} {visitedCountryCount === 1 ? "country" : "countries"}
+            </p>
 
             {visitedCities.length > 0 ? (
               <div>
-                {/* Single row: up to 7 thumbnails + overflow badge */}
-                <div className="flex gap-1.5 mb-2">
+                {/* 2 rows × 4 columns grid, slot 8 = overflow if 8+ cities */}
+                <div className="grid grid-cols-4 gap-1.5 mb-2.5">
                   {visitedCities.slice(0, 7).map((city) => (
                     <Link key={city.id} href={`/cities/${city.slug}`}
-                      className="relative rounded-xl overflow-hidden group shrink-0" title={city.name}
-                      style={{ width: "30px", height: "30px" }}>
+                      className="relative rounded-xl overflow-hidden group" title={city.name}
+                      style={{ aspectRatio: "1" }}>
                       <Image src={city.imageUrl} alt={city.name} fill
-                        className="object-cover group-hover:scale-110 transition-transform" sizes="30px" />
+                        className="object-cover group-hover:scale-110 transition-transform" sizes="56px" />
                       <div className="absolute inset-0 bg-black/15 group-hover:bg-black/0 transition-colors" />
                     </Link>
                   ))}
-                  {visitedCities.length > 7 && (
-                    <div className="rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0"
-                      style={{ width: "30px", height: "30px", background: "var(--bg-primary)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+                  {/* 8th slot: overflow or empty */}
+                  {visitedCities.length >= 8 && (
+                    <div className="rounded-xl flex items-center justify-center text-[10px] font-bold"
+                      style={{ aspectRatio: "1", background: "var(--bg-primary)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
                       +{visitedCities.length - 7}
                     </div>
                   )}
@@ -132,9 +138,7 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
                   </p>
                 )}
 
-                {/* View map → links to public profile which shows the world map */}
-                <Link
-                  href={`/u/${userId}`}
+                <Link href={`/u/${userId}`}
                   className="block text-center text-xs font-semibold py-1.5 rounded-xl transition-all hover:opacity-80"
                   style={{ background: "#3DD9C512", color: "#3DD9C5", border: "1px solid #3DD9C530" }}>
                   View map →

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import DashboardClient from "./DashboardClient";
 import { createClient } from "@/utils/supabase/server";
 import { cities as allCities } from "@/lib/seed-data";
@@ -102,6 +103,7 @@ export default async function DashboardPage() {
   const displayEmail = user?.email ?? "";
 
   return (
+    <Suspense fallback={null}>
     <DashboardClient
       userId={user?.id ?? ""}
       displayName={displayName}
@@ -117,5 +119,6 @@ export default async function DashboardPage() {
         visitedCount: visitedCities.length,
       }}
     />
+    </Suspense>
   );
 }
