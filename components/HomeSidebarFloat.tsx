@@ -112,25 +112,30 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
 
             {visitedCities.length > 0 ? (
               <div>
-                {/* 2 rows × 4 columns grid, slot 8 = overflow if 8+ cities */}
-                <div className="grid grid-cols-4 gap-1.5 mb-2.5">
-                  {visitedCities.slice(0, 7).map((city) => (
-                    <Link key={city.id} href={`/cities/${city.slug}`}
-                      className="relative rounded-xl overflow-hidden group" title={city.name}
-                      style={{ aspectRatio: "1" }}>
-                      <Image src={city.imageUrl} alt={city.name} fill
-                        className="object-cover group-hover:scale-110 transition-transform" sizes="56px" />
-                      <div className="absolute inset-0 bg-black/15 group-hover:bg-black/0 transition-colors" />
-                    </Link>
-                  ))}
-                  {/* 8th slot: overflow or empty */}
-                  {visitedCities.length >= 8 && (
-                    <div className="rounded-xl flex items-center justify-center text-[10px] font-bold"
-                      style={{ aspectRatio: "1", background: "var(--bg-primary)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
-                      +{visitedCities.length - 7}
+                {/* 2 rows × 4 columns: show all if ≤8, else show 7 + overflow */}
+                {(() => {
+                  const showOverflow = visitedCities.length > 8;
+                  const citiesToShow = showOverflow ? 7 : visitedCities.length;
+                  return (
+                    <div className="grid grid-cols-4 gap-1.5 mb-2.5">
+                      {visitedCities.slice(0, citiesToShow).map((city) => (
+                        <Link key={city.id} href={`/cities/${city.slug}`}
+                          className="relative rounded-xl overflow-hidden group" title={city.name}
+                          style={{ aspectRatio: "1" }}>
+                          <Image src={city.imageUrl} alt={city.name} fill
+                            className="object-cover group-hover:scale-110 transition-transform" sizes="56px" />
+                          <div className="absolute inset-0 bg-black/15 group-hover:bg-black/0 transition-colors" />
+                        </Link>
+                      ))}
+                      {showOverflow && (
+                        <div className="rounded-xl flex items-center justify-center text-[10px] font-bold"
+                          style={{ aspectRatio: "1", background: "var(--bg-primary)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+                          +{visitedCities.length - 7}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
 
                 {continents.length > 0 && (
                   <p className="text-[10px] mb-2.5 truncate" style={{ color: "var(--text-muted)" }}>
