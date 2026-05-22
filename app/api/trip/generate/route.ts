@@ -77,32 +77,23 @@ export async function POST(request: Request) {
     return `${tc.name}, ${tc.country} (${tc.duration_days} days):\n${lines.join("\n")}`;
   }).join("\n");
 
-  const prompt = `Create a complete day-by-day travel itinerary for ALL ${totalDays} days of this trip.
+  const prompt = `Create a travel itinerary for ALL ${totalDays} days. Generate EVERY day listed — no skipping.
 
-IMPORTANT: You MUST generate exactly ${totalDays} day objects in the "days" array — one for every single day listed below. Do not skip any days.
-
-Full day schedule:
+Days:
 ${dayBreakdown}
 
-Weather context:
-${weatherText || "No weather data available."}
+Affiliates: ${affiliateText}
 
-Traveler reviews for context:
-${reviewText || "No reviews available."}
+Return ONLY compact JSON. Every string max 80 chars. No markdown:
+{"days":[{"date":"2025-06-01","citySlug":"bangkok","cityName":"Bangkok","overallDay":1,"dayInCity":1,"weather":{"score":8,"crowds":"Medium"},"area":"Sukhumvit","activities":["Visit Grand Palace early morning","Explore Chatuchak market","Chao Phraya boat tour","Evening street food on Khao San Road"],"accommodation":{"content":"Stay in Sukhumvit - central, safe, BTS access","affiliateName":null,"affiliateUrl":null},"notes":"Wear light clothing, stay hydrated"}],"intercityTransport":[{"from":"Bangkok","to":"Tokyo","content":"Fly BKK to NRT ~6h","affiliateName":null,"affiliateUrl":null}]}
 
-Available affiliate partners:
-${affiliateText}
-
-Return ONLY valid compact JSON (no markdown, no newlines inside strings):
-{"days":[{"date":"2025-06-01","citySlug":"barcelona","cityName":"Barcelona","country":"Spain","overallDay":1,"dayInCity":1,"weather":{"score":8,"note":"Warm and sunny","crowds":"Medium"},"area":"Gothic Quarter","activities":["Visit Sagrada Familia (book tickets in advance)","Explore El Born neighbourhood and tapas bars","Sunset walk on Las Ramblas"],"accommodation":{"content":"Stay in Eixample — central, safe, great transport links","affiliateName":null,"affiliateUrl":null},"notes":"Start early to beat the crowds at major sites"}],"intercityTransport":[{"from":"Barcelona","to":"New York City","content":"Fly Barcelona (BCN) to New York (JFK) — ~9 hours","affiliateName":null,"affiliateUrl":null}]}
-
-Rules:
-- Generate ALL ${totalDays} days — every day in dayBreakdown must appear
-- 3-4 specific actionable activities per day as an array of strings
-- One accommodation object per day
-- intercityTransport entries only when the city changes between consecutive days
-- If no matching affiliate link available, use null for affiliateName and affiliateUrl
-- Keep all string values concise (max 120 chars each)`;
+STRICT RULES:
+- MUST have exactly ${totalDays} objects in "days" array
+- 3 activities per day maximum, each under 60 chars
+- accommodation.content under 70 chars
+- notes under 60 chars
+- intercityTransport only when city changes
+- null for missing affiliate values`;
 
   try {
     const message = await client.messages.create({
@@ -111,9 +102,35 @@ Rules:
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text = (message.content[0] as { type: string; text: string }).text.trim()
+    let text = (message.content[0] as { type: string; text: string }).text.trim()
       .replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
-    const itinerary = JSON.parse(text);
+
+    // Attempt to recover truncated JSON by closing open structures
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let itinerary: any;
+    try {
+      itinerary = JSON.parse(text);
+    } catch {
+      // Try to repair truncated JSON: close any open arrays/objects
+      let depth = 0;
+      const stack: string[] = [];
+      for (const ch of text) {
+        if (ch === "{") stack.push("}");
+        else if (ch === "[") stack.push("]");
+        else if (ch === "}" || ch === "]") stack.pop();
+      }
+      // Remove trailing incomplete element (find last complete comma-separated item)
+      const lastComma = text.lastIndexOf(',"');
+      const lastBrace = text.lastIndexOf('}');
+      const lastBracket = text.lastIndexOf(']');
+      const cutAt = Math.max(lastBrace, lastBracket);
+      if (cutAt > 0 && cutAt > lastComma) {
+        text = text.slice(0, cutAt + 1) + stack.reverse().join("");
+      } else if (lastComma > 0) {
+        text = text.slice(0, lastComma) + stack.reverse().join("");
+      }
+      itinerary = JSON.parse(text);
+    }
 
     // Add IDs and visibility flags to each item
     const processed = {
