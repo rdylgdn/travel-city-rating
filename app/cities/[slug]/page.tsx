@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { Suspense } from "react";
 import { MapPin, Star, Users, Calendar } from "lucide-react";
 import { cities } from "@/lib/seed-data";
 import { createClient } from "@/utils/supabase/server";
@@ -10,9 +11,6 @@ import ScoreBar from "@/components/ScoreBar";
 import ReviewCard, { ReviewProfile } from "@/components/ReviewCard";
 import ReviewWithActions from "@/components/ReviewWithActions";
 import ReviewGalleryWrapper from "@/components/ReviewGalleryWrapper";
-import type { GalleryImage } from "@/components/ReviewGallery";
-
-const allCities = cities;
 import BestTimeChart from "@/components/BestTimeChart";
 import AnonymousRatingWidget from "@/components/AnonymousRatingWidget";
 import ReviewsGate from "@/components/ReviewsGate";
@@ -22,6 +20,9 @@ import CityDetailClient from "./CityDetailClient";
 import { scoreColor } from "@/lib/utils";
 import { BudgetMode } from "@/lib/types";
 import { getTravelerBadge } from "@/lib/profile";
+import type { GalleryImage } from "@/components/ReviewGallery";
+
+const allCities = cities;
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -302,7 +303,11 @@ export default async function CityPage({ params, searchParams }: Props) {
         {!user && settings.anonymous_ratings_enabled && <AnonymousRatingWidget citySlug={city.slug} />}
 
         {/* Photo gallery */}
-        {settings.gallery_enabled && galleryImages.length > 0 && <ReviewGalleryWrapper images={galleryImages} />}
+        {settings.gallery_enabled && galleryImages.length > 0 && (
+          <Suspense fallback={null}>
+            <ReviewGalleryWrapper images={galleryImages} />
+          </Suspense>
+        )}
 
         {/* Reviews section */}
         <div>
