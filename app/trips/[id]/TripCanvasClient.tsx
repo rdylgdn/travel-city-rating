@@ -217,21 +217,29 @@ export default function TripCanvasClient({
             <div className="space-y-2">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Transport between cities</p>
               {itinerary.intercityTransport.map((t, i) => (
-                <div key={t.id} className={cn("border rounded-xl p-3 flex items-start justify-between gap-3", t.visible ? "border-gray-100 bg-white" : "border-gray-50 bg-gray-50 opacity-50")}>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-700">{t.from} → {t.to}</p>
-                    <p className="text-sm text-gray-600 mt-0.5">{t.content}</p>
-                    {t.affiliateUrl && t.visible && (
-                      <a href={t.affiliateUrl} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1">
-                        Book via {t.affiliateName} <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                t.visible ? (
+                  <div key={t.id} className="border border-gray-100 bg-white rounded-xl p-3 flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-700">{t.from} → {t.to}</p>
+                      <p className="text-sm text-gray-600 mt-0.5">{t.content}</p>
+                      {t.affiliateUrl && (
+                        <a href={t.affiliateUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1">
+                          Book via {t.affiliateName} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                    <button onClick={() => toggleTransport(i)} className="p-1.5 rounded-lg hover:bg-gray-100" title="Hide">
+                      <Eye className="w-3.5 h-3.5 text-gray-400" />
+                    </button>
                   </div>
-                  <button onClick={() => toggleTransport(i)} className="p-1.5 rounded-lg hover:bg-gray-100">
-                    {t.visible ? <Eye className="w-3.5 h-3.5 text-gray-400" /> : <EyeOff className="w-3.5 h-3.5 text-gray-300" />}
+                ) : (
+                  <button key={t.id} onClick={() => toggleTransport(i)}
+                    className="w-full flex items-center justify-between px-3 py-2 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors">
+                    <span>{t.from} → {t.to} (hidden)</span>
+                    <EyeOff className="w-3.5 h-3.5" />
                   </button>
-                </div>
+                )
               ))}
             </div>
           )}
@@ -254,7 +262,10 @@ function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleAct
   const [newActivity, setNewActivity] = useState("");
   const [showAddInput, setShowAddInput] = useState(false);
 
-  const dateLabel = day.date ? new Date(day.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "";
+  const isIsoDate = /^\d{4}-\d{2}-\d{2}$/.test(day.date ?? "");
+  const dateLabel = isIsoDate
+    ? new Date(day.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+    : "";
 
   return (
     <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white shadow-sm">
@@ -333,23 +344,31 @@ function DayCard({ day, dayIdx, city, isCollapsed, onToggleCollapse, onToggleAct
 
           {/* Accommodation */}
           {day.accommodation && (
-            <div className={cn("border rounded-xl p-3", day.accommodation.visible ? "border-orange-100 bg-orange-50/40" : "border-gray-50 bg-gray-50 opacity-40")}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <p className="text-xs font-semibold text-orange-600 mb-1">Where to stay</p>
-                  <p className="text-sm text-gray-700">{day.accommodation.content}</p>
-                  {day.accommodation.affiliateUrl && day.accommodation.visible && (
-                    <a href={day.accommodation.affiliateUrl} target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1.5">
-                      Book via {day.accommodation.affiliateName} <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
+            day.accommodation.visible ? (
+              <div className="border border-orange-100 bg-orange-50/40 rounded-xl p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-orange-600 mb-1">Where to stay</p>
+                    <p className="text-sm text-gray-700">{day.accommodation.content}</p>
+                    {day.accommodation.affiliateUrl && (
+                      <a href={day.accommodation.affiliateUrl} target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-rose-500 hover:underline flex items-center gap-1 mt-1.5">
+                        Book via {day.accommodation.affiliateName} <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                  <button onClick={() => onToggleAccommodation(dayIdx)} className="p-1.5 rounded-lg hover:bg-orange-100 shrink-0" title="Hide">
+                    <Eye className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
                 </div>
-                <button onClick={() => onToggleAccommodation(dayIdx)} className="p-1.5 rounded-lg hover:bg-orange-100 shrink-0">
-                  {day.accommodation.visible ? <Eye className="w-3.5 h-3.5 text-gray-400" /> : <EyeOff className="w-3.5 h-3.5 text-gray-300" />}
-                </button>
               </div>
-            </div>
+            ) : (
+              <button onClick={() => onToggleAccommodation(dayIdx)}
+                className="w-full flex items-center justify-between px-3 py-2 border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 hover:border-orange-300 hover:text-orange-500 transition-colors">
+                <span>Where to stay (hidden)</span>
+                <EyeOff className="w-3.5 h-3.5" />
+              </button>
+            )
           )}
 
           {/* Day notes */}
