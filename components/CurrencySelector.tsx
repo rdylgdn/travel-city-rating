@@ -51,7 +51,7 @@ export default function CurrencySelector() {
           style={{ color: "var(--text-secondary)" }}
         >
           <span>{currentInfo?.symbol.trim()}</span>
-          <span>{currency}</span>
+          <span className="hidden sm:inline">{currency}</span>
           <ChevronDown className="w-3.5 h-3.5" />
         </button>
 

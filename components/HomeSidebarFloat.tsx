@@ -31,7 +31,7 @@ export default function HomeSidebarFloat({ profile, userId, displayName, visited
 
   return (
     <div
-      className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center hidden lg:flex"
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-40 items-center hidden lg:flex"
       style={{ pointerEvents: "none" }}
     >
       {/* Cards panel */}

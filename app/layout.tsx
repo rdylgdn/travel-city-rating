@@ -31,23 +31,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CurrencyProvider>
           <SavedCitiesProvider>
             <header style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}>
-              <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: "var(--text-primary)" }}>
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+                <Link href="/" className="flex items-center gap-1.5 font-bold text-base sm:text-lg shrink-0" style={{ color: "var(--text-primary)" }}>
                   <Compass className="w-5 h-5" style={{ color: "var(--brand)" }} />
-                  CityRate
+                  <span className="hidden sm:inline">CityRate</span>
                 </Link>
-                <nav className="flex items-center gap-1">
+                <nav className="flex items-center gap-0.5 sm:gap-1 min-w-0">
                   {/* Explore — desktop only */}
                   <Link href="/" className="nav-link hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     Explore
                   </Link>
                   {/* Compare — always visible */}
-                  <Link href="/compare" className="nav-link px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                  <Link href="/compare" className="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     Compare
                   </Link>
                   {/* Trips — desktop always; mobile only when signed in */}
                   {settings.trip_planner_enabled && (
-                    <Link href="/trips" className={`nav-link ${isLoggedIn ? "" : "hidden md:inline-flex"} px-3 py-1.5 rounded-lg text-sm font-medium transition-colors`}>
+                    <Link href="/trips" className={`nav-link ${isLoggedIn ? "" : "hidden md:inline-flex"} px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors`}>
                       Trips
                     </Link>
                   )}
@@ -58,12 +58,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     </Link>
                   )}
                 </nav>
-                <div className="flex items-center gap-3">
-                  {/* USD selector — desktop always; mobile only when signed in */}
+                <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                  {/* USD selector — desktop always; mobile only when signed in (icon-only on mobile) */}
                   <div className={isLoggedIn ? "" : "hidden md:flex"}>
                     <CurrencySelector />
                   </div>
-                  <Suspense fallback={<div className="w-20 h-8 rounded-full animate-pulse" style={{ background: "var(--bg-elevated)" }} />}>
+                  <Suspense fallback={<div className="w-16 sm:w-20 h-8 rounded-full animate-pulse" style={{ background: "var(--bg-elevated)" }} />}>
                     <HeaderAuth />
                   </Suspense>
                 </div>
