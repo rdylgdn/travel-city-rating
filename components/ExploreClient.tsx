@@ -154,7 +154,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Saved / Visited quick filters */}
             {isLoggedIn && (
               <>
@@ -168,7 +168,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   )}
                 >
                   <Bookmark className={cn("w-4 h-4", showingSaved && "fill-white")} />
-                  Saved
+                  <span className="hidden sm:inline">Saved</span>
                   {saved.size > 0 && (
                     <span className={cn(
                       "rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
@@ -189,7 +189,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   )}
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Visited
+                  <span className="hidden sm:inline">Visited</span>
                   {visited.size > 0 && (
                     <span className={cn(
                       "rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
@@ -215,7 +215,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   )}
                 >
                   <BarChart2 className="w-4 h-4" />
-                  Compare
+                  <span className="hidden sm:inline">Compare</span>
                   {compareSlugs.length > 0 && (
                     <span className={cn("rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center",
                       compareSlugs.length >= 2 ? "bg-white text-rose-500" : "bg-rose-200 text-rose-500"
@@ -225,7 +225,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                   )}
                 </button>
                 <button onClick={exitCompareMode} className="flex items-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:border-gray-300 transition-all">
-                  <X className="w-3.5 h-3.5" /> Cancel
+                  <X className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Cancel</span>
                 </button>
               </>
             ) : (
@@ -234,7 +234,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
                 className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:border-rose-300 hover:text-rose-500 transition-all bg-white"
               >
                 <BarChart2 className="w-4 h-4" />
-                Compare
+                <span className="hidden sm:inline">Compare</span>
               </button>
             ))}
 
@@ -249,7 +249,7 @@ export default function ExploreClient({ cities, reviewCounts = {}, anonCounts = 
               )}
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filters
+              <span className="hidden sm:inline">Filters</span>
               {activeFilterCount > 0 && (
                 <span className="bg-white text-rose-500 rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center">
                   {activeFilterCount}
