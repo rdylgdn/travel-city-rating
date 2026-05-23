@@ -9,6 +9,7 @@ import CurrencySelector from "@/components/CurrencySelector";
 import { SavedCitiesProvider } from "@/contexts/SavedCitiesContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { getPlatformSettings } from "@/lib/platform-settings";
+import { createClient } from "@/utils/supabase/server";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getPlatformSettings();
+  const supabase = await createClient();
+  const [settings, { data: { user } }] = await Promise.all([
+    getPlatformSettings(supabase),
+    supabase.auth.getUser(),
+  ]);
+  const isLoggedIn = !!user;
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`} style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
@@ -31,19 +37,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   CityRate
                 </Link>
                 <nav className="flex items-center gap-1">
-                  {[
-                    { href: "/", label: "Explore" },
-                    { href: "/compare", label: "Compare" },
-                    ...(settings.trip_planner_enabled ? [{ href: "/trips", label: "Trips" }] : []),
-                    ...(settings.suggest_city_enabled ? [{ href: "/suggest", label: "Suggest" }] : []),
-                  ].map(({ href, label }) => (
-                    <Link key={label} href={href} className="nav-link px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                      {label}
+                  {/* Explore — desktop only */}
+                  <Link href="/" className="nav-link hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    Explore
+                  </Link>
+                  {/* Compare — always visible */}
+                  <Link href="/compare" className="nav-link px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    Compare
+                  </Link>
+                  {/* Trips — desktop always; mobile only when signed in */}
+                  {settings.trip_planner_enabled && (
+                    <Link href="/trips" className={`nav-link ${isLoggedIn ? "" : "hidden md:inline-flex"} px-3 py-1.5 rounded-lg text-sm font-medium transition-colors`}>
+                      Trips
                     </Link>
-                  ))}
+                  )}
+                  {/* Suggest — desktop only */}
+                  {settings.suggest_city_enabled && (
+                    <Link href="/suggest" className="nav-link hidden md:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                      Suggest
+                    </Link>
+                  )}
                 </nav>
                 <div className="flex items-center gap-3">
-                  <CurrencySelector />
+                  {/* USD selector — desktop always; mobile only when signed in */}
+                  <div className={isLoggedIn ? "" : "hidden md:flex"}>
+                    <CurrencySelector />
+                  </div>
                   <Suspense fallback={<div className="w-20 h-8 rounded-full animate-pulse" style={{ background: "var(--bg-elevated)" }} />}>
                     <HeaderAuth />
                   </Suspense>
