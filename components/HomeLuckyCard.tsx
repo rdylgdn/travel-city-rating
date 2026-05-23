@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Shuffle, Sparkles } from "lucide-react";
+import { Shuffle } from "lucide-react";
 
 export default function HomeLuckyCard({ citySlugs }: { citySlugs: string[] }) {
   const router = useRouter();
@@ -21,18 +21,12 @@ export default function HomeLuckyCard({ citySlugs }: { citySlugs: string[] }) {
         boxShadow: "0 4px 16px rgba(74,222,128,0.10)",
       }}
     >
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-4 h-4" style={{ color: "#4ADE80" }} />
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#4ADE80" }}>
-          Spin the globe
-        </span>
-      </div>
       <div>
         <h3 className="font-bold text-lg mb-2" style={{ color: "var(--text-primary)" }}>
           Feeling Lucky?
         </h3>
         <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          Let chance pick your next destination. Discover a random city from our entire collection — your unexpected next trip might be one click away.
+          Let chance pick your next destination. Discover a random city from our entire collection.
         </p>
       </div>
       <button
