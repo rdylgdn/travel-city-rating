@@ -34,3 +34,13 @@ body {
 /* Nav link hover */
 .nav-link { color: var(--text-secondary); }
 .nav-link:hover { color: var(--text-primary); }
+
+/* Floating card entrance */
+@keyframes float-in {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.animate-float-in {
+  opacity: 0;
+  animation: float-in 0.6s ease-out forwards;
+}
