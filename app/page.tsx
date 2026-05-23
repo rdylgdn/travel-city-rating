@@ -113,8 +113,16 @@ export default async function HomePage() {
         />
       )}
 
-      {/* Feature strips */}
-      <HomeFeatureStrips />
+      {/* Feature strips — Card 3 swaps based on auth + viewport */}
+      <HomeFeatureStrips
+        isLoggedIn={!!user}
+        profile={profile}
+        userId={user?.id ?? ""}
+        displayName={displayName}
+        visitedCities={visitedCities}
+        visitedCountryCount={visitedCountryCount}
+        allCitySlugs={slugs}
+      />
 
       {/* Full explore grid — always full width */}
       <div id="all-cities" className="max-w-7xl mx-auto px-4 py-4">
