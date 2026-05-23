@@ -15,12 +15,17 @@ export default function HeaderAuth() {
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<"signin" | "signup">("signin");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Open modal if ?auth=signin in URL (e.g. redirect from /dashboard)
+  // Open modal if ?auth=signin or ?auth=signup in URL
   useEffect(() => {
-    if (searchParams.get("auth") === "signin") setShowModal(true);
+    const param = searchParams.get("auth");
+    if (param === "signin" || param === "signup") {
+      setModalMode(param);
+      setShowModal(true);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -111,7 +116,7 @@ export default function HeaderAuth() {
       )}
 
       {showModal && (
-        <AuthModal onClose={() => setShowModal(false)} />
+        <AuthModal defaultMode={modalMode} onClose={() => setShowModal(false)} />
       )}
     </>
   );
