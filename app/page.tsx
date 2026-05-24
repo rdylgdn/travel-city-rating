@@ -79,18 +79,11 @@ export default async function HomePage() {
 
   const defaultBudgetMode: BudgetMode = (profile as Profile & { currency?: string })?.currency ? "budget" : "budget";
 
-  // Social proof data for floating cards in hero
-  const topSavedCities = Object.entries(savedCounts)
-    .filter(([, c]) => c > 0)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([slug, count]) => ({ city: cities.find((c) => c.slug === slug), count }))
-    .filter((x) => x.city) as { city: typeof cities[number]; count: number }[];
 
   return (
     <div style={{ minHeight: "100vh" }}>
       {/* Hero */}
-      <HomeHero socialProof={topSavedCities} />
+      <HomeHero />
 
       {/* Floating Travel DNA + Where You've Been — overlays page, doesn't affect layout */}
       {user && (
